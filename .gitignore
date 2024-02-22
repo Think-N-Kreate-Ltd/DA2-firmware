@@ -28,3 +28,16 @@
 # Misc
 .svn
 *.bak
+/DonAlarm_2_MCC.mc3.bak0
+/defmplabxtrace.log
+/defmplabxtrace.log.inx
+/build/
+/dist/
+/nbproject/Package-default.bash
+/nbproject/Makefile-default.mk
+/nbproject/Makefile-impl.mk
+/nbproject/Makefile-genesis.properties
+/nbproject/Makefile-local-default.mk
+/nbproject/Makefile-variables.mk
+/nbproject/private/
+/queuelogs/debugtool
