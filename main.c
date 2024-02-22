@@ -71,6 +71,8 @@ enum ALARMSTATE {
  */
 void main(void) {
     
+    // test
+    
     // NHAN: test new 2.1 board
 //    SYSTEM_Initialize();
 //    V5Enable_SetHigh();
