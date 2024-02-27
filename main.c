@@ -743,10 +743,10 @@ void UpdateDisplay(void) {
                     sprintf(outstring, "PRESSURE: LOW!!!");
                     WriteSmallString(outstring, 6, 0, 0);
                 }
-                // NHAN: show "12H SILENCED" when dual pressed
+                // NHAN: show "12H SLEEP MODE" when dual pressed
                 else if (mstate.alarmLongSilence)
                 {
-                    sprintf(outstring, "12H SILENCED");
+                    sprintf(outstring, "12H SLEEP MODE");
                     WriteSmallString(outstring, 6, 0, 0);  
                 }
 //                else if (alarmState == AlarmHIGH) {
@@ -778,9 +778,9 @@ void UpdateDisplay(void) {
                         WriteSmallString(outstring, 6, 0, 0);
 
                         if (readAlarm.am) { // AM
-                            sprintf(outstring, "@ %02d:%02dAM %02d/%02d/%02d", readAlarm.hour, readAlarm.min, readAlarm.month, readAlarm.day, readAlarm.year);
+                            sprintf(outstring, "@ %02d/%02d/%02d   %02d:%02dAM", alarm.month, alarm.day, alarm.year, alarm.hour, alarm.min);
                         } else { // PM
-                            sprintf(outstring, "@ %02d:%02dPM %02d/%02d/%02d", readAlarm.hour, readAlarm.min, readAlarm.month, readAlarm.day, readAlarm.year);
+                            sprintf(outstring, "@ %02d/%02d/%02d   %02d:%02dPM", alarm.month, alarm.day, alarm.year, alarm.hour, alarm.min);
                         }
                         WriteSmallString(outstring, 7, 0, 0);
                     } else {
@@ -790,7 +790,7 @@ void UpdateDisplay(void) {
 
                 }
 
-                //                NHAN: DON'T SHOW THE RTC TIME
+                // Show date and time on top bar of display
                 GetTime();
 
                 //KRH Testing
@@ -801,25 +801,25 @@ void UpdateDisplay(void) {
                 //sprintf(outstring,"%d %d %d %d",eeconfig.RefHighCts,eeconfig.RefLowCts,eeconfig.RawHighCts,eeconfig.RawLowCts);
                 //WriteSmallString(outstring, 7, 0,0);
 
-                yy = ttime.year - 2000;
-                if (ttime.am) sprintf(outstring, "%02d:%02d:%02dAM", ttime.hour, ttime.minute, ttime.second);
-                else sprintf(outstring, "%02d:%02d:%02dPM", ttime.hour, ttime.minute, ttime.second);
+                yy = ttime.year - 2000;   // NHAN: get last 2 digits of a given year (this only works for 20xx years)                
+                if (ttime.am) sprintf(outstring, "%02d/%02d/%02d   %02d:%02dAM", ttime.month, ttime.day, yy, ttime.hour, ttime.minute);
+                else sprintf(outstring, "%02d/%02d/%02d   %02d:%02dPM", ttime.month, ttime.day, yy, ttime.hour, ttime.minute);
                 WriteSmallString(outstring, 0, 0, 0);
 
                 alternate++;
             } else {  // NHAN: don't show silence instructions when 12h sleep activated
                 if (!mstate.alarmSilence && !mstate.alarmLongSilence)
                 {
-                    sprintf(outstring, "1.PRESS ANY BUTTON");
+                    sprintf(outstring, "PRESS ANY BUTTON");
                     WriteSmallString(outstring, 0, 0, 0);
                     sprintf(outstring, "TO SILENCE");
                     WriteSmallString(outstring, 1, 0, 0);
 
-                    sprintf(outstring, "2.PRESS UP AND");
+                    sprintf(outstring, "PRESS UP AND DOWN");
                     WriteSmallString(outstring, 3, 0, 0);
-                    sprintf(outstring, "DOWN BUTTONS 5 SECONDS");
+                    sprintf(outstring, "BUTTONS FOR 5 SEC");
                     WriteSmallString(outstring, 4, 0, 0);
-                    sprintf(outstring, "TO SILENCE FOR");
+                    sprintf(outstring, "TO SLEEP FOR");
                     WriteSmallString(outstring, 5, 0, 0);
                     sprintf(outstring, "12 HOURS");
                     WriteSmallString(outstring, 6, 0, 0);
@@ -1381,7 +1381,7 @@ void buzzer12hSilence(void)
 void displayVersion(void)
 {
     char outstring[30];
-    sprintf(outstring, "Firmware: %s", VERSION_STRING);
+    sprintf(outstring, "Firmware: %s", FIRMWARE_VERSION_STRING);
     WriteSmallString(outstring, 4, 0, 0);
 }
 /**
