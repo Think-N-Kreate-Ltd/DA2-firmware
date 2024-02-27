@@ -110,7 +110,6 @@ void main(void) {
 
     // Initialize the device
     SYSTEM_Initialize();
-    V5Enable_SetHigh();     //Enable display and sensor power
     
     Initialize();
     INTERRUPT_GlobalInterruptEnable();
@@ -183,6 +182,7 @@ void main(void) {
 //    LED1_SetLow();
 
     Init_I2C1_rtcc();
+    V5Enable_SetHigh();     //Enable display and sensor power
     DispInit();
     DispBKLT_SetHigh();
     Display_Clear();
