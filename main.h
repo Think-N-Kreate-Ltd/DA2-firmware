@@ -64,8 +64,8 @@ const char FIRMWARE_VERSION_STRING[] = "v1.0.1";   // NHAN: show firmware versio
 #define CLEARSHORTSILENT    60          //Alarm sound back on after 1 minutes
 #define CLEARLONGSILENT     600          //Alarm sound back on after 10 minutes
 #else
-#define DISPLAYTIMEOUT      10          //in seconds. Display off after 30 seconds of inactivity
-#define ALARMDISPTIMEOUT    1800        //Leave display on for 30 minutes after an alarm is triggered        
+#define DISPLAYTIMEOUT      60          // Display off after 1 minute of inactivity
+#define ALARMDISPTIMEOUT    60          // Leave display on for 1 minute after an alarm is triggered        
 #define CLEARSHORTSILENT    60          //Alarm sound back on after 1 minutes
 #define CLEARLONGSILENT     43200       //Alarm sound back on after 12 hours
 #endif
