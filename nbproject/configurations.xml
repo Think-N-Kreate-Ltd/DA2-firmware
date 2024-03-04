@@ -326,6 +326,8 @@
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-ffff"/>
         <property key="poweroptions.powerenable" value="false"/>
+        <property key="programmerToGoFilePath"
+                  value="D:/Nhan/DonAlarm/2.1/DA2-firmware/debug/default/[Nhan] DonAlarm_2_Dual_MCC_ptg"/>
         <property key="programmerToGoImageName" value="[Nhan] DonAlarm_2_Dual_MCC_ptg"/>
         <property key="programmertogo.imagename" value=""/>
         <property key="programoptions.donoteraseauxmem" value="false"/>

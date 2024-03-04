@@ -62,11 +62,11 @@ void TMR0_Initialize(void)
 {
     // Set TMR0 to the options selected in the User Interface
 
-    // T0CS FOSC/4; T0CKPS 1:8; T0ASYNC synchronised; 
-    T0CON1 = 0x43;
+    // T0CS FOSC/4; T0CKPS 1:64; T0ASYNC synchronised; 
+    T0CON1 = 0x46;
 
-    // TMR0H 249; 
-    TMR0H = 0xF9;
+    // TMR0H 155; 
+    TMR0H = 0x9B;
 
     // TMR0L 0; 
     TMR0L = 0x00;
@@ -74,7 +74,7 @@ void TMR0_Initialize(void)
     // Clear Interrupt flag before enabling the interrupt
     PIR0bits.TMR0IF = 0;
 
-    // Enable TMR0 interrupt.
+    // Enabling TMR0 interrupt.
     PIE0bits.TMR0IE = 1;
 
     // Set Default Interrupt Handler
