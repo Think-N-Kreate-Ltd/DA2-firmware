@@ -45,7 +45,7 @@
 #include <xc.h> // include processor files - each processor file is guarded.  
 #include "mcc_generated_files/mcc.h"
 
-const char FIRMWARE_VERSION_STRING[] = "v1.0.1";   // NHAN: show firmware version on device power on
+const char FIRMWARE_VERSION_STRING[] = "v1.0.2";   // NHAN: show firmware version on device power on
 
 #define DAQ_SCALE   0.002       //10bits equals 2.048v (vref) and DAQ_SCALE = (2.048/1025) = 0.002 volts per count
 #define BAT_SCALE   0.004       //Bat volts is 2x analog input of 500cnts/v -> cnts*0.004=bat volts
@@ -197,13 +197,18 @@ struct MSTATE {
     uint8_t updateDisplay;
     uint8_t buttonPressed;
     uint8_t pastAlarm;
+    uint8_t portBDebouncedState;    // debounced state
+    uint8_t portBStateLast;         // last state
+    uint8_t debouncedStateLast;
 }mstate;
 
+#define PORTB_IOC_MASK (0b00111000)  // RB3 (BTN_UP), RB4 (BTN_ENTER), RB5 (BTN_DOWN)
 
 void Initialize(void);
 void GetAnalog(void);
 void GetBattVolts(void);
 uint16_t GetRefAnalog(void);
+void ScanPB(void);
 void HandlePB(void);
 void UpdateDisplay(void);
 void SaveEESetup(void);

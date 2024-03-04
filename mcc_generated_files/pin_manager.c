@@ -215,12 +215,14 @@ void PIN_MANAGER_Initialize(void)
 
 
     // register default IOC callback functions at runtime; use these methods to register a custom function
-    IOCBF3_SetInterruptHandler(IOCBF3_DefaultInterruptHandler);
-    IOCBF4_SetInterruptHandler(IOCBF4_DefaultInterruptHandler);
-    IOCBF5_SetInterruptHandler(IOCBF5_DefaultInterruptHandler);
+    IOCBF3_SetInterruptHandler(IOC_InterruptHandler);
+    IOCBF4_SetInterruptHandler(IOC_InterruptHandler);
+    IOCBF5_SetInterruptHandler(IOC_InterruptHandler);
    
+    // NHAN: only enable IOC when device goes to sleep mode
+    // Check buttons states will be handled by Timer0 scan
     // Enable IOCI interrupt 
-    PIE0bits.IOCIE = 1; 
+//    PIE0bits.IOCIE = 1; 
     
 	
     SSP2DATPPS = 0x0A;   //RB2->MSSP2:SDA2;    
@@ -250,7 +252,7 @@ void PIN_MANAGER_IOC(void)
     {
         IOCBF5_ISR();  
     }
-//    PIE0bits.IOCIE = 0;         //Disable IOC interrupts until ready again 
+    PIE0bits.IOCIE = 0;         //Disable IOC interrupts until ready again 
 
 }
 
@@ -351,6 +353,18 @@ void IOCBF5_DefaultInterruptHandler(void){
     //BTN_DN
     if(mstate.downPressed == 0) mstate.downPressed = 1;
     mstate.buttonPressed = 1;
+}
+
+// When any IOC happens, run this handler
+void IOC_InterruptHandler(void)
+{    
+    // Re-enable Timer0 to scan buttons states
+    TMR0 = 0;   // reset Timer0 
+//    TMR0H = 0xF9; 
+//    TMR0L = 0x00;
+    PIR0bits.TMR0IF = 0;    // clear Timer0 interrupt flag
+    PIE0bits.TMR0IE = 1;    // Enable Timer0 interrupt
+    T0CON0bits.T0EN = 1;    // Start Timer0
 }
 
 /**

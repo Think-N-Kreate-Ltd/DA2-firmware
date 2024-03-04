@@ -224,6 +224,7 @@ void main(void) {
     while (1)
     {           
         WWDT_TimerClear();
+        ScanPB();
         if(mstate.buttonPressed) 
         {
             HandlePB();
@@ -296,6 +297,11 @@ void Initialize(void) {
     mstate.menuPressed = 0;
     mstate.menuMode = 0;
     mstate.pastAlarm = 0;
+    
+    // NHAN: initialize state variables for buttons debouncing
+    mstate.portBDebouncedState = PORTB;
+    mstate.portBStateLast = mstate.portBDebouncedState;
+    mstate.debouncedStateLast = mstate.portBDebouncedState;    // get the cached debounced port state
 
     analog.pressure = 0;
 
@@ -361,6 +367,34 @@ void GetAnalog(void) {
 void GetBattVolts(void) {
     analog.rawVoltage = ADCC_GetSingleConversion(Volts);
     analog.battVolts = analog.rawVoltage * BAT_SCALE;
+}
+
+// Scan buttons and update their states
+void ScanPB(void)
+{  
+    uint8_t portState = mstate.portBDebouncedState;
+   
+    // Since buttons are pulled LOW, we are only interested in rising edge, i.e. button is pressed
+    uint8_t risingEdge = (portState ^ mstate.debouncedStateLast) & portState;
+    
+    // Now update individual button state
+    if ((risingEdge & (1<<3)) != 0)   // RB3, i.e. BTN_UP
+    {
+        mstate.upPressed = 1;
+        mstate.buttonPressed = 1;
+    }
+    if ((risingEdge & (1<<4)) != 0)   // RB4, i.e. BTN_ENTER
+    {
+        mstate.menuPressed = 1;
+        mstate.buttonPressed = 1;
+    }
+    if ((risingEdge & (1<<5)) != 0)   // RB5, i.e. BTN_DOWN
+    {
+        mstate.downPressed = 1;
+        mstate.buttonPressed = 1;
+    }
+    
+    mstate.debouncedStateLast = portState; // save state for next time
 }
 
 void HandlePB(void) {
@@ -1198,8 +1232,18 @@ void sleep(void) {
     INTERRUPT_GlobalInterruptDisable();
     //INTERRUPT_PeripheralInterruptEnable();
 //    VREGCONbits.VREGPM = 1; //Low current voltage regulator mode; NHAN: PIC18LF46K40 doesn't have this register
-    PIR0bits.IOCIF = 0; //Clear IOC flag;
-    //PIE0bits.IOCIE = 1;                     //Enable IOC interrupts.
+    
+    // NHAN: disable Timer0, wakeup using IOC
+    TMR0_StopTimer();
+//    PIR0bits.TMR0IF = 0;    // clear Timer0 interrupt flag
+//    PIE0bits.TMR0IE = 0;    // Disable Timer0 interrupt
+//    T0CON0bits.T0EN = 0;    // Stop Timer0
+    
+    IOCBFbits.IOCBF3 = 0;
+    IOCBFbits.IOCBF4 = 0;
+    IOCBFbits.IOCBF5 = 0;
+    PIR0bits.IOCIF = 0; // Clear IOC flag;
+    PIE0bits.IOCIE = 1; // Enable IOC interrupts.
     CPUDOZEbits.IDLEN = 0; //deep sleep
     SLEEP();
     WWDT_TimerClear();
@@ -1213,10 +1257,10 @@ void sleep(void) {
 
 void wake(void) {
     WWDT_TimerClear();
-    IOCBFbits.IOCBF3 = 0;
-    IOCBFbits.IOCBF4 = 0;
-    IOCBFbits.IOCBF5 = 0;
-    PIR0bits.IOCIF = 0;
+//    IOCBFbits.IOCBF3 = 0;
+//    IOCBFbits.IOCBF4 = 0;
+//    IOCBFbits.IOCBF5 = 0;
+//    PIR0bits.IOCIF = 0;
     TMR1_StartTimer();
     SPI1_Initialize();
     INTERRUPT_GlobalInterruptEnable();
