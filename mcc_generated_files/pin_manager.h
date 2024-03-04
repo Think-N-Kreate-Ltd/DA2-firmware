@@ -1048,6 +1048,7 @@ extern void (*IOCBF5_InterruptHandler)(void);
 */
 void IOCBF5_DefaultInterruptHandler(void);
 
+void IOC_InterruptHandler(void);
 
 
 #endif // PIN_MANAGER_H

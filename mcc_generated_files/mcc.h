@@ -56,6 +56,7 @@
 #include "spi1.h"
 #include "i2c2_master.h"
 #include "tmr1.h"
+#include "tmr0.h"
 #include "adcc.h"
 #include "fvr.h"
 #include "memory.h"

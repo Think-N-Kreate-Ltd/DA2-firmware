@@ -21,6 +21,7 @@
         <itemPath>mcc_generated_files/adcc.h</itemPath>
         <itemPath>mcc_generated_files/fvr.h</itemPath>
         <itemPath>mcc_generated_files/clkref.h</itemPath>
+        <itemPath>mcc_generated_files/tmr0.h</itemPath>
       </logicalFolder>
       <itemPath>main.h</itemPath>
       <itemPath>delays.h</itemPath>
@@ -54,6 +55,7 @@
         <itemPath>mcc_generated_files/spi1.c</itemPath>
         <itemPath>mcc_generated_files/fvr.c</itemPath>
         <itemPath>mcc_generated_files/clkref.c</itemPath>
+        <itemPath>mcc_generated_files/tmr0.c</itemPath>
       </logicalFolder>
       <itemPath>main.c</itemPath>
       <itemPath>delays.c</itemPath>
@@ -440,6 +442,8 @@
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-ffff"/>
         <property key="poweroptions.powerenable" value="false"/>
+        <property key="programmerToGoFilePath"
+                  value="D:/Nhan/DonAlarm/2.1/DA2-firmware/debug/default/[Nhan] DonAlarm_2_Dual_MCC_ptg"/>
         <property key="programmerToGoImageName" value="[Nhan] DonAlarm_2_Dual_MCC_ptg"/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>

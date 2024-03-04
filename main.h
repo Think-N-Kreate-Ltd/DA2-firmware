@@ -197,13 +197,18 @@ struct MSTATE {
     uint8_t updateDisplay;
     uint8_t buttonPressed;
     uint8_t pastAlarm;
+    uint8_t portBDebouncedState;    // debounced state
+    uint8_t portBStateLast;         // last state
+    uint8_t debouncedStateLast;
 }mstate;
 
+#define PORTB_IOC_MASK (0b00111000)  // RB3 (BTN_UP), RB4 (BTN_ENTER), RB5 (BTN_DOWN)
 
 void Initialize(void);
 void GetAnalog(void);
 void GetBattVolts(void);
 uint16_t GetRefAnalog(void);
+void ScanPB(void);
 void HandlePB(void);
 void UpdateDisplay(void);
 void SaveEESetup(void);
