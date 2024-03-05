@@ -981,43 +981,54 @@ void UpdateDisplay(void) {
                 switch (mstate.menuLine) {
                     case YEAR:
                         sprintf(outstring, "%s", TimeString[mstate.menuLine]);
-                        WriteSmallString(outstring, 2, 5, 0);
-                        sprintf(outstring, "%d", ttime.s_year);
-                        WriteSmallString(outstring, 4, 5, 0);
+                        WriteSmallString(outstring, 1, 7, 0);
+                        sprintf(outstring, "%4d", ttime.s_year);
+                        WriteLargeString(outstring, 3, 1);
                         break;
                     case MONTH:
                         sprintf(outstring, "%s", TimeString[mstate.menuLine]);
-                        WriteSmallString(outstring, 2, 5, 0);
-                        sprintf(outstring, "%d", ttime.s_month);
-                        WriteSmallString(outstring, 4, 5, 0);
+                        WriteSmallString(outstring, 1, 7, 0);
+                        sprintf(outstring, "%2d", ttime.s_month);
+                        WriteLargeString(outstring, 3, 2);
                         break;
                     case DAY:
                         sprintf(outstring, "%s", TimeString[mstate.menuLine]);
-                        WriteSmallString(outstring, 2, 5, 0);
-                        sprintf(outstring, "%d", ttime.s_day);
-                        WriteSmallString(outstring, 4, 5, 0);
+                        WriteSmallString(outstring, 1, 7, 0);
+                        sprintf(outstring, "%2d", ttime.s_day);
+                        WriteLargeString(outstring, 3, 2);
                         break;
                     case HOUR:
                         sprintf(outstring, "%s", TimeString[mstate.menuLine]);
-                        WriteSmallString(outstring, 2, 5, 0);
-                        if (ttime.s_am) sprintf(outstring, "%d AM", ttime.sadj_hour);
-                        else sprintf(outstring, "%d PM", ttime.sadj_hour);
-                        WriteSmallString(outstring, 4, 5, 0);
+                        WriteSmallString(outstring, 1, 7, 0);
+                        if (ttime.s_am) 
+                        {
+                            sprintf(outstring, "%2d", ttime.sadj_hour);
+                            WriteLargeString(outstring, 3, 1);
+                            sprintf(outstring, " AM");
+                            WriteSmallString(outstring, 6, 9, 0);
+                        }
+                        else
+                        {
+                            sprintf(outstring, "%2d", ttime.sadj_hour);
+                            WriteLargeString(outstring, 3, 1);
+                            sprintf(outstring, " PM");
+                            WriteSmallString(outstring, 6, 9, 0);
+                        }
                         //KRH Testing
                         //sprintf(outstring,"%02d %02d %02d %d,%d",ttime.h_debug,ttime.sadj_hour,ttime.sh_debug,ttime.am,ttime.s_am);
                         //WriteSmallString(outstring, 6, 5,0);
                         break;
                     case MINUTE:
                         sprintf(outstring, "%s", TimeString[mstate.menuLine]);
-                        WriteSmallString(outstring, 2, 5, 0);
-                        sprintf(outstring, "%d", ttime.s_minute);
-                        WriteSmallString(outstring, 4, 5, 0);
+                        WriteSmallString(outstring, 1, 7, 0);
+                        sprintf(outstring, "%2d", ttime.s_minute);
+                        WriteLargeString(outstring, 3, 2);
                         break;
                     case SECOND:
                         sprintf(outstring, "%s", TimeString[mstate.menuLine]);
-                        WriteSmallString(outstring, 2, 5, 0);
-                        sprintf(outstring, "%d", ttime.s_second);
-                        WriteSmallString(outstring, 4, 5, 0);
+                        WriteSmallString(outstring, 1, 7, 0);
+                        sprintf(outstring, "%2d", ttime.s_second);
+                        WriteLargeString(outstring, 3, 2);
                         break;
                     default:
                         break;
