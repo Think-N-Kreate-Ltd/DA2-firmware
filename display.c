@@ -23,16 +23,16 @@ void WriteDisplayCommand(unsigned char cmd)
     if(DISP_SEL_GetValue()) Write15Instruction(cmd);    
     else Write26Data(cmd,1);
 }
-void Write_5x7(unsigned char k,unsigned char page, unsigned char column, unsigned char underline)
-{   //high is 1.5" display and low is 2.6" display
-    if(DISP_SEL_GetValue()) Write15_5x7(k, page, column, underline);  
-    else Write26_5x7(k, page, column, underline);
-}
-void Write_16x24(unsigned char k,unsigned char page, unsigned char column)
-{   //high is 1.5" display and low is 2.6" display
-    if(DISP_SEL_GetValue()) Write15_16x24(k, page, column);    
-    else Write26_16x24(k, page, column);
-}
+//void Write_5x7(unsigned char k,unsigned char page, unsigned char column, unsigned char underline)
+//{   //high is 1.5" display and low is 2.6" display
+//    if(DISP_SEL_GetValue()) Write15_5x7(k, page, column, underline);  
+//    else Write26_5x7(k, page, column, underline);
+//}
+//void Write_16x24(unsigned char k,unsigned char page, unsigned char column)
+//{   //high is 1.5" display and low is 2.6" display
+//    if(DISP_SEL_GetValue()) Write15_16x24(k, page, column);    
+//    else Write26_16x24(k, page, column);
+//}
 void WriteSmallString(char *string, unsigned char line, unsigned char column, unsigned char underline)
 {   //high is 1.5" display and low is 2.6" display
     if(DISP_SEL_GetValue()) Write15SmallString(string, line, column, underline);    

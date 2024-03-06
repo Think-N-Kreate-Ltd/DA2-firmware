@@ -96,93 +96,93 @@ void Write26_5x7(unsigned char k,unsigned char row, unsigned char column, unsign
     if(underline>0) Write26Data(0x80,1);
     else Write26Data(0x00,1);
 }
-void Write26_test(void)
-{
-    unsigned char i,j,m,k; 
-
-    DispCS_SetHigh();
-
-    m=1;
-    k=0;
-
-	for(i=16;i<20;i+=2)
-	{
-        for(j=0;j<8;j++)
-        {
-            SetLineColumnAddress(m+j,1);
-            Write26Data(H_Ascii_6x8[i][j],1);
-            Write26Data(H_Ascii_6x8[i+1][j],1);
-        }
-        m+=8;
-	}
- 
-    DispCS_SetLow(); 
-   
-}
-void Write26_test2(void)
-{
-    unsigned char j,m; 
-
-    DispCS_SetHigh();
-
-    m=5;
-
-    for(j=0;j<26;j+=2)
-    {
-        SetLineColumnAddress(m,1);
-        Write26Data(H_Ascii_16x24[3][j],1);
-        Write26Data(H_Ascii_16x24[3][j+1],1);
-        m++;
-    }
-    m=5;
-    for(j=26;j<52;j++)
-    {
-        SetLineColumnAddress(m,9);
-        Write26Data(H_Ascii_16x24[3][j],1);
-        Write26Data(H_Ascii_16x24[3][j+1],1);
-        m++;
-    }
-
-    DispCS_SetLow(); 
-   
-}
-void Write26_test3(void)
-{
-    unsigned char i,j,m; 
-
-    DispCS_SetHigh();
-
-    
-    i=0;
-    for(i=0;i<3;i++)
-    {
-        m=i*5;
-        for(j=0;j<24;j++)
-        {
-            Write26Data((0x80 + m),0);
-            Write26Data((0x80 + i),0);
-            //SetLineColumnAddress(m,i);
-            Write26Data((unsigned char)((H_Ascii_16x24[i][j] >> 8) & 0x00FF),1);
-            Write26Data((unsigned char)(H_Ascii_16x24[i][j] & 0x00FF),1);
-            m++;
-        }        
-    }
-    for(i=0;i<3;i++)
-    {
-        m=i*5;
-        for(j=0;j<24;j++)
-        {
-            Write26Data((0x80 + m),0);
-            Write26Data((0x88 + i),0);
-            //SetLineColumnAddress(m,i);
-            Write26Data((unsigned char)((H_Ascii_16x24[i][j] >> 8) & 0x00FF),1);
-            Write26Data((unsigned char)(H_Ascii_16x24[i][j] & 0x00FF),1);
-            m++;
-        }        
-    }
-    DispCS_SetLow(); 
-   
-}
+//void Write26_test(void)
+//{
+//    unsigned char i,j,m,k; 
+//
+//    DispCS_SetHigh();
+//
+//    m=1;
+//    k=0;
+//
+//	for(i=16;i<20;i+=2)
+//	{
+//        for(j=0;j<8;j++)
+//        {
+//            SetLineColumnAddress(m+j,1);
+//            Write26Data(H_Ascii_6x8[i][j],1);
+//            Write26Data(H_Ascii_6x8[i+1][j],1);
+//        }
+//        m+=8;
+//	}
+// 
+//    DispCS_SetLow(); 
+//   
+//}
+//void Write26_test2(void)
+//{
+//    unsigned char j,m; 
+//
+//    DispCS_SetHigh();
+//
+//    m=5;
+//
+//    for(j=0;j<26;j+=2)
+//    {
+//        SetLineColumnAddress(m,1);
+//        Write26Data(H_Ascii_16x24[3][j],1);
+//        Write26Data(H_Ascii_16x24[3][j+1],1);
+//        m++;
+//    }
+//    m=5;
+//    for(j=26;j<52;j++)
+//    {
+//        SetLineColumnAddress(m,9);
+//        Write26Data(H_Ascii_16x24[3][j],1);
+//        Write26Data(H_Ascii_16x24[3][j+1],1);
+//        m++;
+//    }
+//
+//    DispCS_SetLow(); 
+//   
+//}
+//void Write26_test3(void)
+//{
+//    unsigned char i,j,m; 
+//
+//    DispCS_SetHigh();
+//
+//    
+//    i=0;
+//    for(i=0;i<3;i++)
+//    {
+//        m=i*5;
+//        for(j=0;j<24;j++)
+//        {
+//            Write26Data((0x80 + m),0);
+//            Write26Data((0x80 + i),0);
+//            //SetLineColumnAddress(m,i);
+//            Write26Data((unsigned char)((H_Ascii_16x24[i][j] >> 8) & 0x00FF),1);
+//            Write26Data((unsigned char)(H_Ascii_16x24[i][j] & 0x00FF),1);
+//            m++;
+//        }        
+//    }
+//    for(i=0;i<3;i++)
+//    {
+//        m=i*5;
+//        for(j=0;j<24;j++)
+//        {
+//            Write26Data((0x80 + m),0);
+//            Write26Data((0x88 + i),0);
+//            //SetLineColumnAddress(m,i);
+//            Write26Data((unsigned char)((H_Ascii_16x24[i][j] >> 8) & 0x00FF),1);
+//            Write26Data((unsigned char)(H_Ascii_16x24[i][j] & 0x00FF),1);
+//            m++;
+//        }        
+//    }
+//    DispCS_SetLow(); 
+//   
+//}
 void Write26_16x24(unsigned char k,unsigned char page, unsigned char column)
 {
     unsigned char i; 

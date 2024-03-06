@@ -33,9 +33,9 @@ void Display26PictureClear(void);
 void initina2(void);
 void initinal(void);
 void   lcd_mesg(unsigned char *adder1);
-void Write26_test(void);
-void Write26_test2(void);
-void Write26_test3(void);
+//void Write26_test(void);
+//void Write26_test2(void);
+//void Write26_test3(void);
 
 #endif	/* XC_HEADER_TEMPLATE_H */
 
