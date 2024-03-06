@@ -724,8 +724,7 @@ void UpdateDisplay(void) {
                 if (mstate.nearLowBattery) {                   
                     // NHAN: show low batt symbol
                     // This is to say battery is about to run out, not actual low level yet
-                    sprintf(outstring, "LOW");
-                    WriteSmallString(outstring, 3, 1, 0);
+                    WriteLowBattSymbol(1, 8);
                 }
 #endif
 

@@ -86,6 +86,31 @@ void Write15LargeString(char *string, unsigned char line, unsigned char column)
         size--;                     // loop until all characters sent (when size = 0)
     }   
 }
+
+void WriteLowBattSymbol(unsigned char line, unsigned char column)
+{
+    unsigned char i; 
+    unsigned char page = line;
+    
+    if(column > 10) return;
+    
+    // 1st page
+	Set_Page_Address(page);
+    Set_Column_Address(Start_column+column*11);	
+	for(i=0;i<40;i+=2)  // 20 times
+	{
+		Write15Data(V_lowBattSymbol[i]);
+	}
+    
+    // 2nd page
+	Set_Page_Address(page+1);
+    Set_Column_Address(Start_column+column*11);	
+	for(i=1;i<40;i+=2)  // 20 times
+	{
+		Write15Data(V_lowBattSymbol[i]);
+	}
+}
+
 void Write15_5x7(unsigned char k,unsigned char page, unsigned char column, unsigned char underline)
 {
     unsigned char i; 
