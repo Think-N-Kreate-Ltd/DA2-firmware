@@ -230,6 +230,7 @@ void PIN_MANAGER_Initialize(void)
     RB1PPS = 0x11;   //RB1->MSSP2:SCL2;    
     RC3PPS = 0x0F;   //RC3->MSSP1:SCK1;    
     RB2PPS = 0x12;   //RB2->MSSP2:SDA2;    
+//    T2INPPS = 0x13;   //RC3->TMR2:T2IN;   // external reset source for Timer2
     RC5PPS = 0x10;   //RC5->MSSP1:SDO1;    
     SSP1DATPPS = 0x14;   //RC4->MSSP1:SDI1;    
     SSP2CLKPPS = 0x09;   //RB1->MSSP2:SCL2;    
@@ -261,6 +262,7 @@ void PIN_MANAGER_IOC(void)
 */
 void IOCBF3_ISR(void) {
 
+    // Add custom IOCBF3 code
 
     // Call the interrupt handler for the callback registered at runtime
     if(IOCBF3_InterruptHandler)
@@ -294,6 +296,7 @@ void IOCBF3_DefaultInterruptHandler(void){
 */
 void IOCBF4_ISR(void) {
 
+    // Add custom IOCBF4 code
 
     // Call the interrupt handler for the callback registered at runtime
     if(IOCBF4_InterruptHandler)
@@ -327,6 +330,7 @@ void IOCBF4_DefaultInterruptHandler(void){
 */
 void IOCBF5_ISR(void) {
 
+    // Add custom IOCBF5 code
 
     // Call the interrupt handler for the callback registered at runtime
     if(IOCBF5_InterruptHandler)
