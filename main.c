@@ -88,6 +88,7 @@ void main(void) {
     SPI1_Open(SPI1_DEFAULT);
 
     // NHAN: check low battery
+    // 3 quick chirps, then sleep
     WWDT_SoftEnable();      //Enable watchdog timer
     while(1) {
         WWDT_TimerClear();
@@ -96,8 +97,6 @@ void main(void) {
         else mstate.lowBattery = 0;
 
         if(mstate.lowBattery) {
-            // 3 quick chirps then go to sleep
-
             PiezoEnable_SetHigh();
             delay_ms(50);
             PiezoEnable_SetLow();
@@ -156,7 +155,7 @@ void main(void) {
         //Display26Picture(pic1);
         Display26PictureClear();
         //Write26_test();
-        Write26_test3();
+//        Write26_test3();
         //delay_ms(2000);
         //DispBKLT_SetLow();
         //Display_Clear();
@@ -176,7 +175,7 @@ void main(void) {
     }
 
     WWDT_SoftEnable();      //Enable watchdog timer
-    WWDT_TimerClear();     // NHAN: since we enable watchdog earlier, need to clear it
+//    WWDT_TimerClear();     // NHAN: since we enable watchdog earlier, need to clear it
 
     while (1)
     {           
@@ -214,7 +213,8 @@ void main(void) {
                 UpdateDisplay();
                 mstate.updateDisplay = 0;
             }
-            if(mstate.alarmHigh || mstate.alarmLow || mstate.lowBattery) soundAlarm();
+//            if(mstate.alarmHigh || mstate.alarmLow || mstate.lowBattery) soundAlarm();
+            if(mstate.alarmHigh || mstate.alarmLow) soundAlarm();  // NHAN: don't sound alarm when low batt here. Low batt is check before this loop
             else PiezoEnable_SetLow();
         }
         if(stime.oneSecondFlag)
@@ -720,12 +720,14 @@ void UpdateDisplay(void) {
                 sprintf(outstring, "PSI");
                 WriteSmallString(outstring, 4, 13, 0);
 
-                if (mstate.lowBattery) {
-                    //sprintf(outstring,"REPLACE BATTERIES");
-                    //WriteSmallString(outstring, 6, 0,0);
-                    sprintf(outstring, "REPLACE BAT %3.1f", analog.battVolts);
-                    WriteSmallString(outstring, 6, 0, 0);
+#ifdef SHOWLOWBATTSYMBOL
+                if (mstate.nearLowBattery) {                   
+                    // NHAN: show low batt symbol
+                    // This is to say battery is about to run out, not actual low level yet
+                    sprintf(outstring, "LOW");
+                    WriteSmallString(outstring, 3, 1, 0);
                 }
+#endif
 
                 if ((alarmState == AlarmHIGH) && !mstate.alarmSilence && !mstate.alarmLongSilence) {
                     sprintf(outstring, "PRESSURE: HIGH!!!");
@@ -1276,26 +1278,28 @@ void soundAlarm(void) //In case of an alarm, this routine is called every 100ms
                 lowPeriod = 0;
                 lowDuty = 0;
             }
-        } else if (mstate.lowBattery) {
-            batPeriod++;
-            if (batPeriod < 50) {
-                batDuty++;
-                if (batDuty < 2) {
-                    PiezoEnable_SetHigh();
-                } else if (batDuty < 4) {
-                    PiezoEnable_SetLow();
-                } else if (batDuty < 6) {
-                    PiezoEnable_SetHigh();
-                } else if (batDuty < 8) {
-                    PiezoEnable_SetLow();
-                } else if (batDuty < 10) {
-                    PiezoEnable_SetHigh();
-                } else PiezoEnable_SetLow();
-            } else {
-                batPeriod = 0;
-                batDuty = 0;
-            }
         }
+        // NHAN: don't sound low batt alarm here
+//        else if (mstate.lowBattery) {
+//            batPeriod++;
+//            if (batPeriod < 50) {
+//                batDuty++;
+//                if (batDuty < 2) {
+//                    PiezoEnable_SetHigh();
+//                } else if (batDuty < 4) {
+//                    PiezoEnable_SetLow();
+//                } else if (batDuty < 6) {
+//                    PiezoEnable_SetHigh();
+//                } else if (batDuty < 8) {
+//                    PiezoEnable_SetLow();
+//                } else if (batDuty < 10) {
+//                    PiezoEnable_SetHigh();
+//                } else PiezoEnable_SetLow();
+//            } else {
+//                batPeriod = 0;
+//                batDuty = 0;
+//            }
+//        }
     }
 }
 
@@ -1353,10 +1357,10 @@ void secondTimer(void) {
 
     if (mstate.displayActive == 0) displayCount = 0;
 
-    // NHAN: set low battery flag here
-#ifndef NOBATCHECK
-    if (analog.battVolts < LOWBATTVOLTS) mstate.lowBattery = 1;
-    else mstate.lowBattery = 0;
+    // NHAN: check battery voltage, show low battery symbol when reaching voltage
+#ifdef SHOWLOWBATTSYMBOL
+    if (analog.battVolts < NEARLOWBATTVOLTS) mstate.nearLowBattery = 1;
+    else mstate.nearLowBattery = 0;
 #endif
     mstate.updateDisplay = 1;
 }

@@ -45,7 +45,7 @@
 #include <xc.h> // include processor files - each processor file is guarded.  
 #include "mcc_generated_files/mcc.h"
 
-const char FIRMWARE_VERSION_STRING[] = "v1.0.3";   // NHAN: show firmware version on device power on
+const char FIRMWARE_VERSION_STRING[] = "v1.1.0";   // NHAN: show firmware version on device power on
 
 #define DAQ_SCALE   0.002       //10bits equals 2.048v (vref) and DAQ_SCALE = (2.048/1025) = 0.002 volts per count
 #define BAT_SCALE   0.004       //Bat volts is 2x analog input of 500cnts/v -> cnts*0.004=bat volts
@@ -54,8 +54,11 @@ const char FIRMWARE_VERSION_STRING[] = "v1.0.3";   // NHAN: show firmware versio
 #define DEF_PRESS_OFFSET 14.7
 #define SLOPESTEP        0.01
 
-#define LOWBATTVOLTS     2.78       // 0.1
-//#define NOBATCHECK      1
+#define LOWBATTVOLTS        2.55 // actual low battery level, only do 3 quick chirps
+#define SHOWLOWBATTSYMBOL           // to show low battery symbol or not
+#ifdef SHOWLOWBATTSYMBOL
+#define NEARLOWBATTVOLTS    2.7  // show low battery symbol when reaching this voltage, a little above low battery level
+#endif
 
 //#define TESTINGTIMES
 #ifdef TESTINGTIMES
@@ -64,7 +67,7 @@ const char FIRMWARE_VERSION_STRING[] = "v1.0.3";   // NHAN: show firmware versio
 #define CLEARSHORTSILENT    60          //Alarm sound back on after 1 minutes
 #define CLEARLONGSILENT     600          //Alarm sound back on after 10 minutes
 #else
-#define DISPLAYTIMEOUT      60          // Display off after 1 minute of inactivity
+#define DISPLAYTIMEOUT      10          // Display off after 1 minute of inactivity
 #define ALARMDISPTIMEOUT    60          // Leave display on for 1 minute after an alarm is triggered        
 #define CLEARSHORTSILENT    60          //Alarm sound back on after 1 minutes
 #define CLEARLONGSILENT     43200       //Alarm sound back on after 12 hours
@@ -183,6 +186,7 @@ struct MSTATE {
     uint8_t alarmLongSilence; //Silence the alarm for 12 hours
     uint8_t sleepMode;        //wake and check pressure on watchdog timeout after sleep
     uint8_t lowBattery;
+    uint8_t nearLowBattery;   // a little above low battery voltage
     uint8_t displayActive;    //Display turns off after x seconds of no activity
     uint8_t displayCounter;   //counter to track no activity
     uint8_t displayMenu;      //If display menu=1 then we show menu lines. Else show default screen
