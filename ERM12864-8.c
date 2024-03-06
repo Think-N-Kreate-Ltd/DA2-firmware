@@ -99,7 +99,7 @@ void WriteLowBattSymbol(unsigned char line, unsigned char column)
     Set_Column_Address(Start_column+column*11);	
 	for(i=0;i<40;i+=2)  // 20 times
 	{
-		Write15Data(V_lowBattSymbol[i]);
+		Write15Data(V_LowBattSymbol[i]);
 	}
     
     // 2nd page
@@ -107,7 +107,31 @@ void WriteLowBattSymbol(unsigned char line, unsigned char column)
     Set_Column_Address(Start_column+column*11);	
 	for(i=1;i<40;i+=2)  // 20 times
 	{
-		Write15Data(V_lowBattSymbol[i]);
+		Write15Data(V_LowBattSymbol[i]);
+	}
+}
+
+void WriteSilenceSymbol(unsigned char line, unsigned char column)
+{
+    unsigned char i; 
+    unsigned char page = line;
+    
+    if(column > 10) return;
+    
+    // 1st page
+	Set_Page_Address(page);
+    Set_Column_Address(Start_column+column*11);	
+	for(i=0;i<40;i+=2)  // 20 times
+	{
+		Write15Data(V_SilenceSymbol[i]);
+	}
+    
+    // 2nd page
+	Set_Page_Address(page+1);
+    Set_Column_Address(Start_column+column*11);	
+	for(i=1;i<40;i+=2)  // 20 times
+	{
+		Write15Data(V_SilenceSymbol[i]);
 	}
 }
 

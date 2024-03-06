@@ -175,7 +175,7 @@ void main(void) {
     }
 
     WWDT_SoftEnable();      //Enable watchdog timer
-//    WWDT_TimerClear();     // NHAN: since we enable watchdog earlier, need to clear it
+    WWDT_TimerClear();     // NHAN: since we enable watchdog earlier, need to clear it
 
     while (1)
     {           
@@ -760,8 +760,12 @@ void UpdateDisplay(void) {
 //                } 
                 else {
                     //                    sprintf(outstring,"PRESSURE: OKAY");
-                    //                    WriteSmallString(outstring, 5, 0,0);  
-
+                    //                    WriteSmallString(outstring, 5, 0,0);
+                    
+                    // NHAN: show silence symbol
+                    if (mstate.alarmSilence) {
+                        WriteSilenceSymbol(2, 0);
+                    }
                     // NHAN:add LAST ALARM xx PSI @ 06:46AM 01/18/24                                          
                     if (lastAlarm > 0) {
                         GetAlarm(lastAlarm - 2); // Don't know why we have to -2, but it works LOL
