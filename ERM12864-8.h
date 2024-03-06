@@ -28,6 +28,7 @@
 void Write15SmallString(char *string, unsigned char line, unsigned char column, unsigned char underline);
 void Write15LargeString(char *string, unsigned char line, unsigned char column);
 void WriteLowBattSymbol(unsigned char line, unsigned char column);
+void WriteSilenceSymbol(unsigned char line, unsigned char column);
 void Write15_5x7(unsigned char k,unsigned char page, unsigned char column, unsigned char underline);
 void Write15_12x16(unsigned char k,unsigned char page, unsigned char column);
 //void Write15_16x24(unsigned char k,unsigned char page, unsigned char column);
