@@ -247,6 +247,7 @@ void Initialize(void) {
     mstate.alarmHigh = 0;
     mstate.alarmLow = 0;
     mstate.alarmSilence = 0;
+    mstate.shortSilenceTimeout = 0;
     mstate.displayActive = 1;
     mstate.displayCounter = 0;
     mstate.downPressed = 0;
@@ -765,6 +766,11 @@ void UpdateDisplay(void) {
                     // NHAN: show silence symbol
                     if (mstate.alarmSilence) {
                         WriteSilenceSymbol(2, 0);
+                        
+                        // NHAN: start timing to cancel silence, i.e. reactivate alarm if it happens
+                        // Basically, start Timer2
+                        PIR4bits.TMR2IF = 0;  // clear Timer2 IF
+                        TMR2_Start();
                     }
                     // NHAN:add LAST ALARM xx PSI @ 06:46AM 01/18/24                                          
                     if (lastAlarm > 0) {
@@ -1081,8 +1087,9 @@ void CheckAlarms(void) {
 
     if (analog.pressure > eeconfig.AlarmHigh && !mstate.alarmLongSilence) { // NHAN: re-alarm when CANCEL SILENCE
         if (lasthigh == 1) {
-            if (alarmState != AlarmHIGH) {
+            if ((alarmState != AlarmHIGH) || mstate.shortSilenceTimeout) {
                 lasthigh = 0;
+                mstate.shortSilenceTimeout = 0;
                 mstate.alarmHigh = 1;
                 alarmState = AlarmHIGH;
 
@@ -1108,8 +1115,9 @@ void CheckAlarms(void) {
         } else lasthigh = 1;
     } else if (analog.pressure < eeconfig.AlarmLow && !mstate.alarmLongSilence) {   // NHAN: re-alarm when CANCEL SILENCE
         if (lastlow == 1) {
-            if (alarmState != AlarmLOW) {  // NHAN: comment
+            if (alarmState != AlarmLOW || mstate.shortSilenceTimeout) {  // NHAN: comment
                 lastlow = 0;
+                mstate.shortSilenceTimeout = 0;
                 mstate.alarmLow = 1;
                 alarmState = AlarmLOW;
 
@@ -1202,6 +1210,7 @@ void sleep(void) {
 
     SPI1_Close();
     TMR1_StopTimer();
+    TMR2_StopTimer();
     INTERRUPT_GlobalInterruptDisable();
     //INTERRUPT_PeripheralInterruptEnable();
 //    VREGCONbits.VREGPM = 1; //Low current voltage regulator mode; NHAN: PIC18LF46K40 doesn't have this register
@@ -1223,7 +1232,7 @@ void sleep(void) {
     delay_ms(100);
     if (PIR0bits.IOCIF == 1) {
         PIR0bits.IOCIF = 0;
-        __debug_break();
+//        __debug_break();
         wake();
     }
 }

@@ -22,6 +22,7 @@
         <itemPath>mcc_generated_files/fvr.h</itemPath>
         <itemPath>mcc_generated_files/clkref.h</itemPath>
         <itemPath>mcc_generated_files/tmr0.h</itemPath>
+        <itemPath>mcc_generated_files/tmr2.h</itemPath>
       </logicalFolder>
       <itemPath>main.h</itemPath>
       <itemPath>delays.h</itemPath>
@@ -56,6 +57,7 @@
         <itemPath>mcc_generated_files/fvr.c</itemPath>
         <itemPath>mcc_generated_files/clkref.c</itemPath>
         <itemPath>mcc_generated_files/tmr0.c</itemPath>
+        <itemPath>mcc_generated_files/tmr2.c</itemPath>
       </logicalFolder>
       <itemPath>main.c</itemPath>
       <itemPath>delays.c</itemPath>

@@ -45,7 +45,7 @@
 #include <xc.h> // include processor files - each processor file is guarded.  
 #include "mcc_generated_files/mcc.h"
 
-const char FIRMWARE_VERSION_STRING[] = "v1.2.0";   // NHAN: show firmware version on device power on
+const char FIRMWARE_VERSION_STRING[] = "v1.2.1";   // NHAN: show firmware version on device power on
 
 #define DAQ_SCALE   0.002       //10bits equals 2.048v (vref) and DAQ_SCALE = (2.048/1025) = 0.002 volts per count
 #define BAT_SCALE   0.004       //Bat volts is 2x analog input of 500cnts/v -> cnts*0.004=bat volts
@@ -69,8 +69,8 @@ const char FIRMWARE_VERSION_STRING[] = "v1.2.0";   // NHAN: show firmware versio
 #else
 #define DISPLAYTIMEOUT      60          // Display off after 1 minute of inactivity
 #define ALARMDISPTIMEOUT    60          // Leave display on for 1 minute after an alarm is triggered        
-#define CLEARSHORTSILENT    60          //Alarm sound back on after 1 minutes
-#define CLEARLONGSILENT     43200       //Alarm sound back on after 12 hours
+#define CLEARSHORTSILENT    30          // Alarm sound back on after this number of seconds
+#define CLEARLONGSILENT     43200       // Alarm sound back on after 12 hours
 #endif
 
 #define FIRST_WRITE_EEDATA      0xAA    //Indicator that EE has been written after initial programming
@@ -183,6 +183,7 @@ struct MSTATE {
     uint8_t alarmHigh;        //High pressure alarm is active
     uint8_t alarmLow;         //Low pressure alarm is active
     uint8_t alarmSilence;     //Silence the piezo sound.
+    uint8_t shortSilenceTimeout;    // use to check whether short silence is timeout or not
     uint8_t alarmLongSilence; //Silence the alarm for 12 hours
     uint8_t sleepMode;        //wake and check pressure on watchdog timeout after sleep
     uint8_t lowBattery;
