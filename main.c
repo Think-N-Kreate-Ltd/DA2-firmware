@@ -71,40 +71,6 @@ enum ALARMSTATE {
  */
 void main(void) {
     
-    // test
-    
-    // NHAN: test new 2.1 board
-//    SYSTEM_Initialize();
-//    V5Enable_SetHigh();
-//    
-//    DispBKLT_SetHigh();
-//    
-//    PiezoEnable_SetHigh();
-//    delay_ms(50);
-//    PiezoEnable_SetLow();
-//    delay_ms(50);
-//    PiezoEnable_SetHigh();
-//    delay_ms(50);
-//    PiezoEnable_SetLow();
-//    delay_ms(50);
-//    PiezoEnable_SetHigh();
-//    delay_ms(50);
-//    PiezoEnable_SetLow();
-//    NHAN: display won't show properly under 2.75V
-//    SYSTEM_Initialize();
-//    V5Enable_SetHigh();
-////    delay_ms(5000);
-//    SPI1_Open(SPI1_DEFAULT);
-//    DispInit();
-//    DispBKLT_SetHigh();
-//    Display_Clear();
-//    displayVersion();
-//    while(1)
-//    {
-//        LED1_Toggle();
-//        delay_ms(500);
-//    }    
-    
     uint8_t ii,jj;
     unsigned char outstring[100];   
 
