@@ -85,15 +85,6 @@ void main(void) {
     // Disable the Peripheral Interrupts
     //INTERRUPT_PeripheralInterruptDisable();
         
-    //    // NHAN: test new board
-    //    V5Enable_SetHigh();
-    //    for (uint8_t i=0; i<3; i++) {
-    //        PiezoEnable_SetHigh();
-    //        delay_ms(100);
-    //        PiezoEnable_SetLow();
-    //        delay_ms(100);
-    //    }  
-    
     SPI1_Open(SPI1_DEFAULT);
 
     // NHAN: check low battery
