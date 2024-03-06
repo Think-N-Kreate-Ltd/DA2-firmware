@@ -102,44 +102,44 @@ void Write15_5x7(unsigned char k,unsigned char page, unsigned char column, unsig
     if(underline>0) Write15Data(0x80);
     else Write15Data(0x00);            
 }
-void Write15_12x16(unsigned char k,unsigned char page, unsigned char column)
-{
-    unsigned char i; 
-    
-    if(column > 10) return;
-    
-	Set_Page_Address(page)	;
-    Set_Column_Address(Start_column+column*13);	
-	for(i=0;i<24;i+=2)  // 12 times
-	{
-		Write15Data(V_Ascii_12x16[k][i]);
-	}
-	Set_Page_Address(page+1)	;
-    Set_Column_Address(Start_column+column*13);	
-	for(i=1;i<24;i+=2)  // 12 times
-	{
-		Write15Data(V_Ascii_12x16[k][i]);
-	}
-}
-void Write15_16x24(unsigned char k,unsigned char page, unsigned char column)
-{
-    unsigned char i; 
-    
-    if(column > 10) return;
-    
-	Set_Page_Address(page);
-    Set_Column_Address(Start_column+column*17);	
-	for(i=0;i<48;i+=2)
-	{
-		Write15Data(V_Ascii_16x24[k][i]);
-	}
-	Set_Page_Address(page+1);
-    Set_Column_Address(Start_column+column*17);	
-	for(i=1;i<48;i+=2)
-	{
-		Write15Data(V_Ascii_16x24[k][i]);
-	}
-}
+//void Write15_12x16(unsigned char k,unsigned char page, unsigned char column)
+//{
+//    unsigned char i; 
+//    
+//    if(column > 10) return;
+//    
+//	Set_Page_Address(page)	;
+//    Set_Column_Address(Start_column+column*13);	
+//	for(i=0;i<24;i+=2)  // 12 times
+//	{
+//		Write15Data(V_Ascii_12x16[k][i]);
+//	}
+//	Set_Page_Address(page+1)	;
+//    Set_Column_Address(Start_column+column*13);	
+//	for(i=1;i<24;i+=2)  // 12 times
+//	{
+//		Write15Data(V_Ascii_12x16[k][i]);
+//	}
+//}
+//void Write15_16x24(unsigned char k,unsigned char page, unsigned char column)
+//{
+//    unsigned char i; 
+//    
+//    if(column > 10) return;
+//    
+//	Set_Page_Address(page);
+//    Set_Column_Address(Start_column+column*17);	
+//	for(i=0;i<48;i+=2)
+//	{
+//		Write15Data(V_Ascii_16x24[k][i]);
+//	}
+//	Set_Page_Address(page+1);
+//    Set_Column_Address(Start_column+column*17);	
+//	for(i=1;i<48;i+=2)
+//	{
+//		Write15Data(V_Ascii_16x24[k][i]);
+//	}
+//}
 
 void Write15_20x32(unsigned char k,unsigned char page, unsigned char column)
 {
