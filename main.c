@@ -715,9 +715,9 @@ void UpdateDisplay(void) {
             }
 
             if (!mstate.alarmHigh && !mstate.alarmLow) alternate = 0;
-            if (alternate > 5) alternate = 0;
+            if (alternate > 10) alternate = 0;
 
-            if (alternate < 3) {
+            if (alternate < 5) {
                 // NHAN: increase current pressure font size
                 sprintf(outstring, "%3d", analog.pressure);
                 WriteLargeString(outstring, 1, 1);
