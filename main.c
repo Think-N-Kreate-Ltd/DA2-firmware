@@ -269,21 +269,26 @@ void Initialize(void) {
         eeconfig.POffset = 15;
         eeconfig.PSlope = 1.18;
         eeconfig.firstwrite = FIRST_WRITE_EEDATA;
-        eeconfig.AlarmHigh = 90;
-        eeconfig.AlarmLow = 40;
-        lastAlarm = 0;
+        eeconfig.AlarmHigh = 80;
+        eeconfig.AlarmLow = 40;        
         SaveEESetup();
 
+        // NHAN: initially, alarm history should be empty
+        // Here we just save a normal event data as the 1st alarm, this will be required when checking "LAST ALARM"
+        lastAlarm = 0;
+        uint16_t alarmAddress = ALARM_BASE_ADDRESS + (lastAlarm * ALARM_SIZE);            
         alarm.alarm = AlarmOKAY;
-        alarm.year = 23;
+        alarm.year = 24;
         alarm.month = 1;
         alarm.day = 1;
         alarm.hour = 0;
         alarm.min = 0;
         alarm.sec = 0;
-        alarm.am = 1;
-        WriteAlarm(lastAlarm);
-
+        alarm.am = 1;             
+        WriteAlarm(alarmAddress);
+        
+        // NHAN: update `lastAlarm` index, which is saved at `ALARM_TOTAL_ADDRESS`
+        DATAEE_WriteByte(ALARM_TOTAL_ADDRESS, lastAlarm);
     }
 
     //Load latest alarm location
@@ -772,24 +777,24 @@ void UpdateDisplay(void) {
                         PIR4bits.TMR2IF = 0;  // clear Timer2 IF
                         TMR2_Start();
                     }
-                    // NHAN:add LAST ALARM xx PSI @ 06:46AM 01/18/24                                          
-                    if (lastAlarm > 0) {
-                        GetAlarm(lastAlarm - 2); // Don't know why we have to -2, but it works LOL
-
-                        sprintf(outstring, "LAST ALARM:%3d PSI", readAlarm.pressure); // readalarm.pressure depends on the active one in the history menu
+                    // NHAN:add LAST ALARM xx PSI @ 06:46AM 01/18/24                                                              
+                    GetAlarm(lastAlarm);  // read last alarm event and save to `readAlarm` struct variable
+                    if (readAlarm.alarm != AlarmOKAY)
+                    {
+                        sprintf(outstring, "LAST ALARM:%3d PSI", readAlarm.pressure);
                         WriteSmallString(outstring, 6, 0, 0);
 
                         if (readAlarm.am) { // AM
-                            sprintf(outstring, "@ %02d/%02d/%02d   %02d:%02dAM", alarm.month, alarm.day, alarm.year, alarm.hour, alarm.min);
+                            sprintf(outstring, "@ %02d/%02d/%02d   %02d:%02dAM", readAlarm.month, readAlarm.day, readAlarm.year, readAlarm.hour, readAlarm.min);
                         } else { // PM
-                            sprintf(outstring, "@ %02d/%02d/%02d   %02d:%02dPM", alarm.month, alarm.day, alarm.year, alarm.hour, alarm.min);
+                            sprintf(outstring, "@ %02d/%02d/%02d   %02d:%02dPM", readAlarm.month, readAlarm.day, readAlarm.year, readAlarm.hour, readAlarm.min);
                         }
                         WriteSmallString(outstring, 7, 0, 0);
-                    } else {
+                    }
+                    else {
                         sprintf(outstring, "LAST ALARM: NO");
                         WriteSmallString(outstring, 6, 0, 0);
                     }
-
                 }
 
                 // Show date and time on top bar of display
@@ -1033,6 +1038,9 @@ void SaveEESetup(void) {
     }
 }
 
+// NHAN: This function reads configuration data saved in EEPROM
+// to `eeconfig` struct variable.
+// Configuration is saved starting from address 0x0000
 void ReadEESetup(void) {
     uint16_t len;
     uint16_t eeaddress;
@@ -1104,12 +1112,18 @@ void CheckAlarms(void) {
                 alarm.sec = ttime.second;
                 alarm.am = ttime.am;
 
-                alarmAddress = ALARM_BASE_ADDRESS + (lastAlarm * ALARM_SIZE);
+                __debug_break();
                 lastAlarm++;
-                if (lastAlarm > MAX_EE_ALARMS) lastAlarm = 0;
-                if (alarmAddress > MAX_ADDRESS) alarmAddress = ALARM_BASE_ADDRESS; //Wrap around on memory
+                alarmAddress = ALARM_BASE_ADDRESS + (lastAlarm * ALARM_SIZE);
+                // Override alarm at the base memory location of EEPROM
+                if ((lastAlarm > MAX_EE_ALARMS) || (alarmAddress > MAX_ADDRESS))
+                {
+                    lastAlarm = 0;                      // Wrap around on index
+                    alarmAddress = ALARM_BASE_ADDRESS;  // Wrap around on memory    
+                }
+                                                
+                // Write new alarm and update its index
                 WriteAlarm(alarmAddress);
-
                 DATAEE_WriteByte(ALARM_TOTAL_ADDRESS, lastAlarm);
             }
         } else lasthigh = 1;
@@ -1132,12 +1146,18 @@ void CheckAlarms(void) {
                 alarm.sec = ttime.second;
                 alarm.am = ttime.am;
 
-                alarmAddress = ALARM_BASE_ADDRESS + (lastAlarm * ALARM_SIZE);
+                __debug_break();
                 lastAlarm++;
-                if (lastAlarm > MAX_EE_ALARMS) lastAlarm = 0;
-                if (alarmAddress > MAX_ADDRESS) alarmAddress = ALARM_BASE_ADDRESS; //Wrap around on memory
+                alarmAddress = ALARM_BASE_ADDRESS + (lastAlarm * ALARM_SIZE);
+                // Override alarm at the base memory location of EEPROM
+                if ((lastAlarm > MAX_EE_ALARMS) || (alarmAddress > MAX_ADDRESS))
+                {
+                    lastAlarm = 0;                      // Wrap around on index
+                    alarmAddress = ALARM_BASE_ADDRESS;  // Wrap around on memory    
+                }
+                                                
+                // Write new alarm and update its index
                 WriteAlarm(alarmAddress);
-
                 DATAEE_WriteByte(ALARM_TOTAL_ADDRESS, lastAlarm);
             }
         } else lastlow = 1;
@@ -1149,33 +1169,16 @@ void CheckAlarms(void) {
             //mstate.alarmLow = 0;
             alarmState = AlarmOKAY;
 
-            GetTime();
-            alarm.alarm = AlarmOKAY;
-            alarm.year = (uint8_t) (ttime.year - 2000);
-            alarm.month = ttime.month;
-            alarm.day = ttime.day;
-            alarm.pressure = analog.pressure;
-            alarm.hour = (uint8_t) ttime.hour;
-            alarm.min = ttime.minute;
-            alarm.sec = ttime.second;
-            alarm.am = ttime.am;
-
-            alarmAddress = ALARM_BASE_ADDRESS + (lastAlarm * ALARM_SIZE);
-            lastAlarm++;
-            if (lastAlarm > MAX_EE_ALARMS) lastAlarm = 0;
-            if (alarmAddress > MAX_ADDRESS) alarmAddress = ALARM_BASE_ADDRESS; //Wrap around on memory
-            WriteAlarm(alarmAddress);
-
-            DATAEE_WriteByte(ALARM_TOTAL_ADDRESS, lastAlarm);
+            // NHAN: here should be normal, don't need to save to EEPROM
         }
     }
-
 }
 
 void GetAlarm(uint8_t num) {
     uint16_t alarmAddress;
 
     if (num <= lastAlarm) alarmAddress = ALARM_BASE_ADDRESS + (num * ALARM_SIZE);
+    // NHAN: what to do here?
     else alarmAddress = ALARM_BASE_ADDRESS + (lastAlarm * ALARM_SIZE);
 
     ReadAlarm(alarmAddress);

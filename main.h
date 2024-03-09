@@ -45,7 +45,7 @@
 #include <xc.h> // include processor files - each processor file is guarded.  
 #include "mcc_generated_files/mcc.h"
 
-const char FIRMWARE_VERSION_STRING[] = "v1.2.1";   // NHAN: show firmware version on device power on
+const char FIRMWARE_VERSION_STRING[] = "v1.2.2";   // NHAN: show firmware version on device power on
 
 #define DAQ_SCALE   0.002       //10bits equals 2.048v (vref) and DAQ_SCALE = (2.048/1025) = 0.002 volts per count
 #define BAT_SCALE   0.004       //Bat volts is 2x analog input of 500cnts/v -> cnts*0.004=bat volts
@@ -73,12 +73,12 @@ const char FIRMWARE_VERSION_STRING[] = "v1.2.1";   // NHAN: show firmware versio
 #define CLEARLONGSILENT     43200       // Alarm sound back on after 12 hours
 #endif
 
-#define FIRST_WRITE_EEDATA      0xAA    //Indicator that EE has been written after initial programming
-#define ALARM_TOTAL_ADDRESS     25
-#define ALARM_BASE_ADDRESS      30      //Alarm logging start address
-#define ALARM_SIZE              10      //Alarms are 10 bytes in length
-#define MAX_ADDRESS             1022    //EE memory range ends here
-#define MAX_EE_ALARMS           90      //Maximum number of alarms to save. Start overwriting at the beginning.
+#define FIRST_WRITE_EEDATA      0xAA    // Indicator that EE has been written after initial programming
+#define ALARM_TOTAL_ADDRESS     0x0025  // EE address to save alarm index, i.e. `lastAlarm`
+#define ALARM_BASE_ADDRESS      0x0030  // Alarm logging start address
+#define ALARM_SIZE              10      // Alarms are 10 bytes in length
+#define MAX_ADDRESS             0x1022  // EE memory range ends here
+#define MAX_EE_ALARMS           90      // Maximum number of alarms to save. Start overwriting at the beginning.
 
 //Menu Levels
 #define MAINLEVEL   0
