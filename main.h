@@ -45,7 +45,7 @@
 #include <xc.h> // include processor files - each processor file is guarded.  
 #include "mcc_generated_files/mcc.h"
 
-const char FIRMWARE_VERSION_STRING[] = "v1.2.3";   // NHAN: show firmware version on device power on
+const char FIRMWARE_VERSION_STRING[] = "v1.3.0";   // NHAN: show firmware version on device power on
 
 #define DAQ_SCALE   0.002       //10bits equals 2.048v (vref) and DAQ_SCALE = (2.048/1025) = 0.002 volts per count
 #define BAT_SCALE   0.004       //Bat volts is 2x analog input of 500cnts/v -> cnts*0.004=bat volts
@@ -71,6 +71,7 @@ const char FIRMWARE_VERSION_STRING[] = "v1.2.3";   // NHAN: show firmware versio
 #define ALARMDISPTIMEOUT    60          // Leave display on for 1 minute after an alarm is triggered        
 #define CLEARSHORTSILENT    30          // Alarm sound back on after this number of seconds
 #define CLEARLONGSILENT     43200       // Alarm sound back on after 12 hours
+#define ALARM_ACTIVATE_TIMEOUT  3       // pressure has to be out of limits for this amount of seconds to activate
 #endif
 
 #define FIRST_WRITE_EEDATA      0xAA    // Indicator that EE has been written after initial programming
@@ -185,6 +186,11 @@ struct MSTATE {
     uint8_t alarmSilence;     //Silence the piezo sound.
     uint8_t shortSilenceTimeout;    // use to check whether short silence is timeout or not
     uint8_t alarmLongSilence; //Silence the alarm for 12 hours
+    uint16_t alarmElapsedTime;  // NHAN: used to record alarm elapsed time. It will be reset when user acknowledges, i.e. press any button during alarm event.
+                                // Number of seconds since an out of limit pressure value is first detected
+                                // This needs to be inside `CheckAlarms()` because we need to update the 
+                                // elapsed time during both normal and sleep mode. `CheckAlarms()` is called
+                                // in both normal and sleep mode.
     uint8_t sleepMode;        //wake and check pressure on watchdog timeout after sleep
     uint8_t lowBattery;
     uint8_t nearLowBattery;   // a little above low battery voltage
@@ -218,16 +224,18 @@ void HandlePB(void);
 void UpdateDisplay(void);
 void SaveEESetup(void);
 void ReadEESetup(void);
-void WriteAlarm(uint16_t add);
-void ReadAlarm(uint16_t add);
+void SaveAlarm(uint8_t alarmType);
+void WriteAlarmEE(uint16_t add);
+void ReadAlarmEE(uint16_t add);
 void CheckAlarms(void);
-void GetAlarm(uint8_t num);
-void ClearAlarm(void);
+void GetAlarmEE(uint8_t num);
+void ClearAlarmEE(void);
 void sleep(void);
 void wake(void);
 void soundAlarm(void);
 void secondTimer(void);
 void buzzer12hSilence(void);
 void displayVersion(void);
+void alarmSilenceSet(void);
 #endif	/* XC_HEADER_TEMPLATE_H */
 

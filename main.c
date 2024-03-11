@@ -191,8 +191,8 @@ void main(void) {
         if(mstate.sleepMode)
         {
             sleep();
-            GetAnalog();
-            CheckAlarms();
+            GetAnalog();            
+            CheckAlarms();            
             if((alarmState != AlarmOKAY) && !mstate.alarmSilence && !mstate.alarmLongSilence)
             {
                 __debug_break();
@@ -220,8 +220,7 @@ void main(void) {
         if(stime.oneSecondFlag)
         {
             stime.oneSecondFlag = false;
-            LED1_Toggle();
-            GetAnalog();            
+            GetAnalog();                        
             CheckAlarms();
             if(mstate.alarmHigh || mstate.alarmLow) mstate.displayActive = 1;
             secondTimer();
@@ -248,6 +247,7 @@ void Initialize(void) {
     mstate.alarmLow = 0;
     mstate.alarmSilence = 0;
     mstate.shortSilenceTimeout = 0;
+    mstate.alarmElapsedTime = 0;
     mstate.displayActive = 1;
     mstate.displayCounter = 0;
     mstate.downPressed = 0;
@@ -285,7 +285,7 @@ void Initialize(void) {
         alarm.min = 0;
         alarm.sec = 0;
         alarm.am = 1;             
-        WriteAlarm(alarmAddress);
+        WriteAlarmEE(alarmAddress);
         
         // NHAN: update `lastAlarm` index, which is saved at `ALARM_TOTAL_ADDRESS`
         DATAEE_WriteByte(ALARM_TOTAL_ADDRESS, lastAlarm);
@@ -322,6 +322,12 @@ void GetAnalog(void) {
     ftemp2 = ftemp1 * eeconfig.PSlope;
     ftemp2 += 0.5;
     analog.pressure = (int16_t) ftemp2;
+    
+    if(analog.pressure < 0)
+    {
+//        __debug_break();
+        // TODO: `analog.pressure` can be < 0. What to do?
+    }
     //if(!mstate.displayActive) V5Enable_SetLow();     //Enable sensor power
 }
 
@@ -365,9 +371,7 @@ void HandlePB(void) {
         mstate.displayActive = 1;
         if ((mstate.alarmHigh || mstate.alarmLow) && mstate.menuLevel != MENULEVEL) { // NHAN: when inside menu, not able to silence
 //            if (mstate.alarmHigh || mstate.alarmLow) {
-            mstate.alarmSilence = 1;
-            mstate.alarmHigh = 0;
-            mstate.alarmLow = 0;
+            alarmSilenceSet();          
         }
         /*    
                 if(mstate.menuLevel == MAINLEVEL)
@@ -391,7 +395,7 @@ void HandlePB(void) {
                 switch (mstate.menuLine) {
                     case PAST:
                         if (mstate.pastAlarm < lastAlarm) mstate.pastAlarm++;
-                        GetAlarm(mstate.pastAlarm);
+                        GetAlarmEE(mstate.pastAlarm);
                         break;
                     case HIGHTHRESH:
                         if (eeconfig.AlarmHigh < 150) eeconfig.AlarmHigh++;
@@ -459,11 +463,9 @@ void HandlePB(void) {
 
     if (mstate.downPressed) {
         mstate.displayActive = 1;
-                if ((mstate.alarmHigh || mstate.alarmLow) && mstate.menuLevel != MENULEVEL) { // NHAN: when inside menu, not able to silence
+        if ((mstate.alarmHigh || mstate.alarmLow) && mstate.menuLevel != MENULEVEL) { // NHAN: when inside menu, not able to silence
 //        if (mstate.alarmHigh || mstate.alarmLow) {
-            mstate.alarmSilence = 1;
-            mstate.alarmHigh = 0;
-            mstate.alarmLow = 0;
+            alarmSilenceSet(); 
         }
 
         /*        
@@ -489,7 +491,7 @@ void HandlePB(void) {
                 switch (mstate.menuLine) {
                     case PAST:
                         if (mstate.pastAlarm > 0) mstate.pastAlarm--;
-                        GetAlarm(mstate.pastAlarm);
+                        GetAlarmEE(mstate.pastAlarm);
                         break;
                     case HIGHTHRESH:
                         if (eeconfig.AlarmHigh > 0) eeconfig.AlarmHigh--;
@@ -575,11 +577,9 @@ void HandlePB(void) {
          */
 
         mstate.updateDisplay = 1;
-                if ((mstate.alarmHigh || mstate.alarmLow) && mstate.menuLevel != MENULEVEL) { // NHAN: when inside menu, not able to silence
+        if ((mstate.alarmHigh || mstate.alarmLow) && mstate.menuLevel != MENULEVEL) { // NHAN: when inside menu, not able to silence
 //        if (mstate.alarmHigh || mstate.alarmLow) {
-            mstate.alarmSilence = 1;
-            mstate.alarmHigh = 0;
-            mstate.alarmLow = 0;
+            alarmSilenceSet();
         }
         if (mstate.displayActive == 0) {
             mstate.displayActive = 1;
@@ -599,7 +599,7 @@ void HandlePB(void) {
                     case PAST:
                         mstate.pastAlarm = lastAlarm;
                         mstate.adjusting = 1;
-                        GetAlarm(mstate.pastAlarm);
+                        GetAlarmEE(mstate.pastAlarm);
                         break;
                     case HIGHTHRESH:
                     case LOWTHRESH:
@@ -645,7 +645,7 @@ void HandlePB(void) {
                         ttime.s_second = ttime.second;
                         break;
                     case CLEAR:
-                        ClearAlarm();
+                        ClearAlarmEE();
                         mstate.menuLine = EXIT;
                         break;
                     default:
@@ -719,12 +719,21 @@ void UpdateDisplay(void) {
 
             if (alternate < 5) {
                 // NHAN: increase current pressure font size
-                sprintf(outstring, "%3d", analog.pressure);
-                WriteLargeString(outstring, 1, 1);
+                if(analog.pressure >= 0)
+                {
+                    sprintf(outstring, "%3d", analog.pressure);
+                    WriteLargeString(outstring, 1, 1);
+                    // NHAN: show unit, PSI
+                    sprintf(outstring, "PSI");
+                    WriteSmallString(outstring, 4, 13, 0);
+                }
+                else
+                {
+                    // when pressure reading is < 0                    
+                    sprintf(outstring, "PLEASE CALIB ZERO");
+                    WriteSmallString(outstring, 4, 0, 0);
+                }
 
-                // NHAN: show unit, PSI
-                sprintf(outstring, "PSI");
-                WriteSmallString(outstring, 4, 13, 0);
 
 #ifdef SHOWLOWBATTSYMBOL
                 if (mstate.nearLowBattery) {                   
@@ -778,16 +787,16 @@ void UpdateDisplay(void) {
                         TMR2_Start();
                     }
                     // NHAN:add LAST ALARM xx PSI @ 06:46AM 01/18/24                                                              
-                    GetAlarm(lastAlarm);  // read last alarm event and save to `readAlarm` struct variable
+                    GetAlarmEE(lastAlarm);  // read last alarm event and save to `readAlarm` struct variable
                     if (readAlarm.alarm != AlarmOKAY)
                     {
                         sprintf(outstring, "LAST ALARM:%3d PSI", readAlarm.pressure);
                         WriteSmallString(outstring, 6, 0, 0);
 
                         if (readAlarm.am) { // AM
-                            sprintf(outstring, "@ %02d/%02d/%02d   %02d:%02dAM", readAlarm.month, readAlarm.day, readAlarm.year, readAlarm.hour, readAlarm.min);
+                            sprintf(outstring, "@ %02d/%02d/%02d %02d:%02dAM", readAlarm.month, readAlarm.day, readAlarm.year, readAlarm.hour, readAlarm.min);
                         } else { // PM
-                            sprintf(outstring, "@ %02d/%02d/%02d   %02d:%02dPM", readAlarm.month, readAlarm.day, readAlarm.year, readAlarm.hour, readAlarm.min);
+                            sprintf(outstring, "@ %02d/%02d/%02d %02d:%02dPM", readAlarm.month, readAlarm.day, readAlarm.year, readAlarm.hour, readAlarm.min);
                         }
                         WriteSmallString(outstring, 7, 0, 0);
                     }
@@ -1056,7 +1065,51 @@ void ReadEESetup(void) {
         *data++ = DATAEE_ReadByte(eeaddress++);
 }
 
-void WriteAlarm(uint16_t add) {
+/* Set alarm data fields and save them */
+void SaveAlarm(uint8_t alarmType)
+{
+    uint16_t alarmAddress;
+    
+    if(alarmType == AlarmHIGH)
+    {
+        alarm.alarm = AlarmHIGH;
+    }
+    else if(alarmType == AlarmLOW)
+    {
+        alarm.alarm = AlarmLOW;
+    }
+    else
+    {
+        __debug_break();
+        // AlarmOKAY here, nothing to do
+    }
+    
+    GetTime();
+    alarm.year = (uint8_t) (ttime.year - 2000);
+    alarm.month = ttime.month;
+    alarm.day = ttime.day;
+    alarm.pressure = analog.pressure;
+    alarm.hour = (uint8_t) ttime.hour;
+    alarm.min = ttime.minute;
+    alarm.sec = ttime.second;
+    alarm.am = ttime.am;
+    
+    lastAlarm++;
+    alarmAddress = ALARM_BASE_ADDRESS + (lastAlarm * ALARM_SIZE);
+    // Override alarm at the base memory location of EEPROM
+    if ((lastAlarm > MAX_EE_ALARMS) || (alarmAddress > MAX_ADDRESS))
+    {
+        lastAlarm = 0;                      // Wrap around on index
+        alarmAddress = ALARM_BASE_ADDRESS;  // Wrap around on memory    
+    }
+
+    // Write new alarm and update its index
+    WriteAlarmEE(alarmAddress);
+    DATAEE_WriteByte(ALARM_TOTAL_ADDRESS, lastAlarm);
+}
+
+/* Write configured alarm to EEPROM */
+void WriteAlarmEE(uint16_t add) {
     uint16_t len;
     uint16_t eeaddress;
     void *ptr;
@@ -1073,7 +1126,8 @@ void WriteAlarm(uint16_t add) {
     }
 }
 
-void ReadAlarm(uint16_t add) {
+/* Read saved alarm from EEPROM */
+void ReadAlarmEE(uint16_t add) {
     uint16_t len;
     uint16_t eeaddress;
     void *ptr;
@@ -1089,112 +1143,126 @@ void ReadAlarm(uint16_t add) {
 }
 
 void CheckAlarms(void) {
+    // TODO: disable LED flashing to further reduce sleep current
+    // LED1 blinks to indicate that we are checking alarm
+    LED1_SetHigh();
+    delay_ms(50);
+    LED1_SetLow();
+    
     static uint8_t lasthigh = 0;
     static uint8_t lastlow = 0;
-    uint16_t alarmAddress;
+    bool pressureIsHigh = (analog.pressure > eeconfig.AlarmHigh);
+    bool pressureIsLow = (analog.pressure < eeconfig.AlarmLow);
 
-    if (analog.pressure > eeconfig.AlarmHigh && !mstate.alarmLongSilence) { // NHAN: re-alarm when CANCEL SILENCE
-        if (lasthigh == 1) {
-            if ((alarmState != AlarmHIGH) || mstate.shortSilenceTimeout) {
-                lasthigh = 0;
-                mstate.shortSilenceTimeout = 0;
-                mstate.alarmHigh = 1;
-                alarmState = AlarmHIGH;
+    if(( pressureIsHigh || pressureIsLow)  &&
+        (!mstate.alarmSilence && !mstate.alarmLongSilence))
+    {
+        // Here pressure is out of limit, update elapsed time.
+        // Note that during sleep mode, this function is called about every 4s
+        if (mstate.sleepMode)
+        {
+            mstate.alarmElapsedTime += 4;
+        }
+        else    // normal mode
+        {
+            mstate.alarmElapsedTime += 1;
+        }
+                
+        if(pressureIsHigh)  // When pressure is High
+        {
+            if (lasthigh == 1) {
+                if ((alarmState != AlarmHIGH) || mstate.shortSilenceTimeout) {                               
+                    // If elapsed time exceeds the timeout, activate the alarm and write to EE
+                    if (mstate.alarmElapsedTime > ALARM_ACTIVATE_TIMEOUT)
+                    {
+                        __debug_break();
+                        lasthigh = 0;                    
+                        mstate.alarmHigh = 1;
+                        alarmState = AlarmHIGH;
 
-                GetTime();
-                alarm.alarm = AlarmHIGH;
-                alarm.year = (uint8_t) (ttime.year - 2000);
-                alarm.month = ttime.month;
-                alarm.day = ttime.day;
-                alarm.pressure = analog.pressure;
-                alarm.hour = (uint8_t) ttime.hour;
-                alarm.min = ttime.minute;
-                alarm.sec = ttime.second;
-                alarm.am = ttime.am;
-
-                __debug_break();
-                lastAlarm++;
-                alarmAddress = ALARM_BASE_ADDRESS + (lastAlarm * ALARM_SIZE);
-                // Override alarm at the base memory location of EEPROM
-                if ((lastAlarm > MAX_EE_ALARMS) || (alarmAddress > MAX_ADDRESS))
-                {
-                    lastAlarm = 0;                      // Wrap around on index
-                    alarmAddress = ALARM_BASE_ADDRESS;  // Wrap around on memory    
+                        mstate.shortSilenceTimeout = 0;
+                        SaveAlarm(alarmState);
+                    }
+                    else
+                    {
+                        // Not handled yet
+                    }                
                 }
-                                                
-                // Write new alarm and update its index
-                WriteAlarm(alarmAddress);
-                DATAEE_WriteByte(ALARM_TOTAL_ADDRESS, lastAlarm);
-            }
-        } else lasthigh = 1;
-    } else if (analog.pressure < eeconfig.AlarmLow && !mstate.alarmLongSilence) {   // NHAN: re-alarm when CANCEL SILENCE
-        if (lastlow == 1) {
-            if (alarmState != AlarmLOW || mstate.shortSilenceTimeout) {  // NHAN: comment
-                lastlow = 0;
-                mstate.shortSilenceTimeout = 0;
-                mstate.alarmLow = 1;
-                alarmState = AlarmLOW;
-
-                GetTime();
-                alarm.alarm = AlarmLOW;
-                alarm.year = (uint8_t) (ttime.year - 2000);
-                alarm.month = ttime.month;
-                alarm.day = ttime.day;
-                alarm.pressure = analog.pressure;
-                alarm.hour = (uint8_t) ttime.hour;
-                alarm.min = ttime.minute;
-                alarm.sec = ttime.second;
-                alarm.am = ttime.am;
-
-                __debug_break();
-                lastAlarm++;
-                alarmAddress = ALARM_BASE_ADDRESS + (lastAlarm * ALARM_SIZE);
-                // Override alarm at the base memory location of EEPROM
-                if ((lastAlarm > MAX_EE_ALARMS) || (alarmAddress > MAX_ADDRESS))
+                else
                 {
-                    lastAlarm = 0;                      // Wrap around on index
-                    alarmAddress = ALARM_BASE_ADDRESS;  // Wrap around on memory    
+                    // Not handled yet
                 }
-                                                
-                // Write new alarm and update its index
-                WriteAlarm(alarmAddress);
-                DATAEE_WriteByte(ALARM_TOTAL_ADDRESS, lastAlarm);
+            } else lasthigh = 1;
+        }
+        else if(pressureIsLow)  // When pressure is Low
+        {
+            if (lastlow == 1) {
+            if (alarmState != AlarmLOW || mstate.shortSilenceTimeout) {
+                // If elapsed time exceeds the timeout, activate the alarm and write to EE
+                if (mstate.alarmElapsedTime > ALARM_ACTIVATE_TIMEOUT)
+                {
+                    __debug_break();
+                    lastlow = 0;                    
+                    mstate.alarmLow = 1;
+                    alarmState = AlarmLOW;
+
+                    mstate.shortSilenceTimeout = 0;
+                    SaveAlarm(alarmState);
+                }
+                else
+                {
+                    // Not handled yet
+                }                
             }
-        } else lastlow = 1;
-    } else {
+            else
+            {
+                // Not handled yet
+            }            
+            } else lastlow = 1;
+        }
+        else
+        {
+            __debug_break();
+            // Should never jump here
+        }        
+    }
+    else {
         if (alarmState != AlarmOKAY) {
+            __debug_break();
             lasthigh = 0;
             lastlow = 0;
-            //mstate.alarmHigh = 0;
-            //mstate.alarmLow = 0;
-            alarmState = AlarmOKAY;
-
-            // NHAN: here should be normal, don't need to save to EEPROM
         }
+        else
+        {
+            // Not handled yet
+        }
+        
+        // NHAN: here should be normal
+        alarmState = AlarmOKAY;
+        mstate.alarmElapsedTime = 0;
     }
 }
 
-void GetAlarm(uint8_t num) {
+/* Get saved alarm using index EEPROM */
+void GetAlarmEE(uint8_t num) {
     uint16_t alarmAddress;
 
     if (num <= lastAlarm) alarmAddress = ALARM_BASE_ADDRESS + (num * ALARM_SIZE);
     // NHAN: what to do here?
     else alarmAddress = ALARM_BASE_ADDRESS + (lastAlarm * ALARM_SIZE);
 
-    ReadAlarm(alarmAddress);
+    ReadAlarmEE(alarmAddress);
 }
 
-void ClearAlarm(void) {
+/* Delete saved alarms from EEPROM */
+void ClearAlarmEE(void) {
+    // TODO: below only change the index to the base alarm address,
+    // it's not deleting anything. Need to properly delete the alarms here!!!
     lastAlarm = 0;
     DATAEE_WriteByte(ALARM_TOTAL_ADDRESS, lastAlarm);
 }
 
 void sleep(void) {
-    // TODO: disable LED flashing to further reduce sleep current
-    LED1_SetHigh();
-    delay_ms(100);
-    LED1_SetLow();
-
     DispBKLT_SetLow(); //Turn off backlight
     V5Enable_SetLow(); //Disable sensor power
     PiezoEnable_SetLow(); //disable piezo power
@@ -1338,10 +1406,6 @@ void secondTimer(void) {
         if (mstate.alarmLongSilence) longSleepCount++;
     }
 
-
-    if (alarmState == AlarmOKAY) {
-        mstate.alarmSilence = 0;
-    }
     if (dualPressButton > 5) {
         // NHAN: 12 hour sleep confirmed
         buzzer12hSilence();
@@ -1415,6 +1479,15 @@ void displayVersion(void)
     sprintf(outstring, "Firmware: %s", FIRMWARE_VERSION_STRING);
     WriteSmallString(outstring, 4, 0, 0);
 }
+
+// When alarm is silenced, i.e. press any button during alarm event, set corresponding state variables
+void alarmSilenceSet(void)
+{
+    mstate.alarmSilence = 1;
+    mstate.alarmHigh = 0;
+    mstate.alarmLow = 0;
+}
+
 /**
  End of File
  */
