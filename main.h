@@ -45,7 +45,7 @@
 #include <xc.h> // include processor files - each processor file is guarded.  
 #include "mcc_generated_files/mcc.h"
 
-const char FIRMWARE_VERSION_STRING[] = "v1.3.0";   // NHAN: show firmware version on device power on
+const char FIRMWARE_VERSION_STRING[] = "v1.3.1";   // NHAN: show firmware version on device power on
 
 #define DAQ_SCALE   0.002       //10bits equals 2.048v (vref) and DAQ_SCALE = (2.048/1025) = 0.002 volts per count
 #define BAT_SCALE   0.004       //Bat volts is 2x analog input of 500cnts/v -> cnts*0.004=bat volts
@@ -131,7 +131,7 @@ static char * MenuString[] =
 static char * TimeString[] = 
 {
     "        ",
-    "SET TIME",
+    "<BACK",
     "Year    ",
     "Month   ",
     "Day     ",
