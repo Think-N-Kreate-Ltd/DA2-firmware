@@ -311,19 +311,33 @@ void Disp15Init(void)
     ENTIRE_DISPLAY_OFF();
 }
 
-void Display15Picture(unsigned char pic[])
+/* Display bitmap represented by 1D array */
+// bitmap: bitmap to be displayed
+// Width: width of bitmap, in pixels
+// Height: height of bitmap, in pixels
+// page: each page has 8 rows, from 0 -> 7
+// y: column, from 0 -> 127
+void Write15Bitmap(unsigned char bitmap[], uint8_t Width, uint8_t Height, unsigned char page, unsigned char y)
 {
-    unsigned char i,j,num=0;
-	InitialDisplayLine15(0x40);
-	for(i=0;i<0x08;i++)
-	{
-	Set_Page_Address(i);
-    Set_Column_Address(0x00);
-        for(j=0;j<0x80;j++)
-		{
-		    Write15Data(pic[i*0x80+j]);
-		}
-	}
+    unsigned char i, j;    
+    unsigned numPages = Height / 8; // each page has 8 rows. Note: only accept numPages multiples of 8
+    uint16_t len = Width * numPages;
+    
+    // Handle out of bound coordinates
+    if((page > 7) || (y > 127))     // since display resolution is 128x64
+    {
+        return;
+    }
+    
+    for(i=0; i<numPages; i++)
+    {
+        Set_Page_Address(page+i);
+        Set_Column_Address(Start_column+y);  // not sure yet
+        for(j=i; j<len; j+=numPages)
+        {
+            Write15Data(bitmap[j]);
+        }
+    }    
     return;
 }
 

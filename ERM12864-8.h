@@ -42,7 +42,7 @@ void Set_Page_Address(unsigned char add);
 void Set_Column_Address(unsigned char add);
 void Set_Contrast_Control_Register(unsigned char mod);
 void Disp15Init(void);
-void Display15Picture(unsigned char pic[]);
+void Write15Bitmap(unsigned char bitmap[], uint8_t Width, uint8_t Height, unsigned char page, unsigned char y);
 void Display15Clear(void);
 
 #endif	/* XC_HEADER_TEMPLATE_H */

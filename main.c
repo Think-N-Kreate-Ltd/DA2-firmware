@@ -142,7 +142,7 @@ void main(void) {
     DispInit();
     DispBKLT_SetHigh();
     Display_Clear();
-    displayVersion();
+    displayVersion();    
     delay_ms(1000);   // wait some time to read the version
     ii=0;
     jj=0;
@@ -270,7 +270,7 @@ void Initialize(void) {
         eeconfig.PSlope = 1.18;
         eeconfig.firstwrite = FIRST_WRITE_EEDATA;
         eeconfig.AlarmHigh = 80;
-        eeconfig.AlarmLow = 40;        
+        eeconfig.AlarmLow = 0;      // Chang from 40 -> 0. See Bug ID 43       
         SaveEESetup();
 
         // NHAN: initially, alarm history should be empty
@@ -1023,6 +1023,9 @@ void UpdateDisplay(void) {
                     else
                         WriteSmallString(TimeString[ii], ii, 0, 0);
                 }
+                
+                // NHAN: add symbol to indicate that we're in "SET TIME" menu
+                Write15Bitmap(V_testBitmap, 40, 40, 1, 75);
             }
             break;
         default:
@@ -1477,7 +1480,7 @@ void displayVersion(void)
 {
     char outstring[30];
     sprintf(outstring, "Firmware: %s", FIRMWARE_VERSION_STRING);
-    WriteSmallString(outstring, 4, 0, 0);
+    WriteSmallString(outstring, 4, 0, 0);        
 }
 
 // When alarm is silenced, i.e. press any button during alarm event, set corresponding state variables

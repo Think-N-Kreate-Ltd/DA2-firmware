@@ -117,11 +117,11 @@ static char * MenuString[] =
     "                 ",
     "EXIT             ",
 //    "SAVED ALARMS     ",
-    "SET HI ALARM",
-    "SET LO ALARM",
+    "SET HI ALARM     ",
+    "SET LO ALARM     ",
     "PRESSURE CAL ZERO",
     "PRESSURE CAL HIGH",
-    "CANCEL 12H SLEEP",
+    "CANCEL 12H SLEEP ",
     "SET TIME         ",  
 //    "CLEAR ALARM HIST "
 };
@@ -130,14 +130,14 @@ static char * MenuString[] =
 
 static char * TimeString[] = 
 {
-    "        ",
-    "<BACK",
-    "Year    ",
-    "Month   ",
-    "Day     ",
-    "Hour    ",
-    "Minute  ",
-    "Second  "
+    "      ",
+    "<BACK ",
+    "YEAR  ",
+    "MONTH ",
+    "DAY   ",
+    "HOUR  ",
+    "MINUTE",
+    "SECOND"
 };
 
 #define MAXTIMESTRING   8
