@@ -23,8 +23,8 @@ void Write15SmallString(char *string, unsigned char line, unsigned char column, 
     while(size)
     {
         tout = *string;
-        if (tout == 38) tout = 1;              // "&"
-        else if (tout == 46) tout = 2;         // "." 
+//        if (tout == 38) tout = 1;              // "&"
+        if (tout == 46) tout = 2;         // "." 
         else {
             tout -= 44;
             if(tout < 0) tout = 0;                          //No ascii below "."

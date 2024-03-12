@@ -326,7 +326,7 @@ void GetAnalog(void) {
     if(analog.pressure < 0)
     {
 //        __debug_break();
-        // TODO: `analog.pressure` can be < 0. What to do?
+        analog.pressure = 0;    // set to 0 to prevent beeping when device is not yet connected to water system. See Bug ID 43.
     }
     //if(!mstate.displayActive) V5Enable_SetLow();     //Enable sensor power
 }
