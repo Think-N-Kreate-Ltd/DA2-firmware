@@ -314,6 +314,7 @@ void GetAnalog(void) {
     delay_ms(200);
     analog.rawPressure = ADCC_GetSingleConversion(Pressure);
     analog.rawVoltage = ADCC_GetSingleConversion(Volts);
+    // TODO: disable sensor power after ADC conversion
 
     analog.battVolts = analog.rawVoltage * BAT_SCALE;
     //Now do calibration
@@ -326,7 +327,7 @@ void GetAnalog(void) {
     if(analog.pressure < 0)
     {
 //        __debug_break();
-        // TODO: `analog.pressure` can be < 0. What to do?
+        analog.pressure = 0;    // set to 0 to prevent beeping when device is not yet connected to water system. See Bug ID 43.
     }
     //if(!mstate.displayActive) V5Enable_SetLow();     //Enable sensor power
 }
@@ -1326,7 +1327,7 @@ void wake(void) {
     mstate.displayActive = 1;
     mstate.menuLevel = MAINLEVEL;
     SPI1_Open(SPI1_DEFAULT);
-    delay_ms(10);
+    delay_ms(10);   // TODO: check why delay here
     DispInit();
     UpdateDisplay();
 }
