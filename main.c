@@ -1396,7 +1396,7 @@ void secondTimer(void) {
 
         if (mstate.alarmLongSilence) longSleepCount += 4;
     } else {
-        displayCount++; // TODO: after HP > display off, we should not increment this anymore
+        displayCount++;
         displayAlarmCount++;
         if (BTN_DOWN_GetValue() && BTN_UP_GetValue()) dualPressButton++;
         else dualPressButton = 0;
