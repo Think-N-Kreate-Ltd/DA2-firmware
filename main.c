@@ -40,6 +40,16 @@
     OF FEES, IF ANY, THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS 
     SOFTWARE.
  */
+
+/* 
+ * TIMERS DESCRIPTIONS: 
+ * 
+ * Timer0   Buttons debouncing 
+ * Timer1   Set 100ms and 1s flags
+ * Timer2   Check timeout after HP or LP is acknowledged using any buttons
+ * Timer3   Generate delay_us() and delay_ms()
+ */
+
 #include <string.h>
 #include "main.h"
 #include "mcc_generated_files/mcc.h"
@@ -87,56 +97,6 @@ void main(void) {
         
     SPI1_Open(SPI1_DEFAULT);
 
-    // NHAN: check low battery
-    // 3 quick chirps, then sleep
-    WWDT_SoftEnable();      //Enable watchdog timer
-    while(1) {
-        WWDT_TimerClear();
-        GetBattVolts();
-        if(analog.battVolts < LOWBATTVOLTS) mstate.lowBattery = 1;
-        else mstate.lowBattery = 0;
-
-        if(mstate.lowBattery) {
-            PiezoEnable_SetHigh();
-            delay_ms(50);
-            PiezoEnable_SetLow();
-            delay_ms(50);
-            PiezoEnable_SetHigh();
-            delay_ms(50);
-            PiezoEnable_SetLow();
-            delay_ms(50);
-            PiezoEnable_SetHigh();
-            delay_ms(50);
-            PiezoEnable_SetLow();
-
-            sleep();     
-        }      
-        else {
-            break;
-        }    
-    }
-
-    // Sound alarm twice to indicate startup
-//    PiezoEnable_SetHigh();
-//    LED1_SetHigh();
-//    delay_ms(50);
-//    PiezoEnable_SetLow();
-//    LED1_SetLow();
-//    delay_ms(50);
-//    PiezoEnable_SetHigh();
-//    LED2_SetHigh();
-//    delay_ms(50);
-//    PiezoEnable_SetLow();
-//    LED2_SetLow();
-//    delay_ms(50);
-//    PiezoEnable_SetHigh();
-//    LED1_SetHigh();
-//    LED2_SetHigh();
-//    delay_ms(50);
-//    PiezoEnable_SetLow();
-//    LED2_SetLow();
-//    LED1_SetLow();
-
     Init_I2C1_rtcc();
     V5Enable_SetHigh();     //Enable display and sensor power
     DispInit();
@@ -156,26 +116,9 @@ void main(void) {
         Display26PictureClear();
         //Write26_test();
 //        Write26_test3();
-        //delay_ms(2000);
-        //DispBKLT_SetLow();
-        //Display_Clear();
-        //DispBKLT_SetHigh();
-        //delay_ms(2000);
-        //DispBKLT_SetLow();
-        //Display26PictureClear();
-        //DispBKLT_SetHigh();
-        //delay_ms(2000);
-        //DispBKLT_SetLow();
-        //initinal();   		 // Fonts Mode
-        //delay_us(100);           
-        //lcd_mesg(IC_TST);      //Show chanese fonts
-        //delay_ms(2000);
-        //sprintf(outstring,"TEST");
-        //WriteSmallString(outstring, 0, 0,0);
     }
 
     WWDT_SoftEnable();      //Enable watchdog timer
-    WWDT_TimerClear();     // NHAN: since we enable watchdog earlier, need to clear it
 
     while (1)
     {           
@@ -192,17 +135,26 @@ void main(void) {
         {
             sleep();
             GetAnalog();            
-            CheckAlarms();            
-            if((alarmState != AlarmOKAY) && !mstate.alarmSilence && !mstate.alarmLongSilence)
+            if(!mstate.lowBattery)  // only check alarm when battery is not low
             {
-                __debug_break();
-                wake();
+                CheckAlarms();
+                if((alarmState != AlarmOKAY) && !mstate.alarmSilence && !mstate.alarmLongSilence)
+                {
+                    __debug_break();
+                    wake();
+                }
+                else
+                {
+                    secondTimer();
+                }
             }
             else
             {
-//                    __debug_break();
-                secondTimer();
+                // Here when low battery, do 3 quick chirps, then continue to sleep
+                lowBattSound();
+                __debug_break();
             }
+
             continue;              
         }
         if(stime.hundredMSflag)
@@ -213,17 +165,31 @@ void main(void) {
                 UpdateDisplay();
                 mstate.updateDisplay = 0;
             }
-//            if(mstate.alarmHigh || mstate.alarmLow || mstate.lowBattery) soundAlarm();
-            if(mstate.alarmHigh || mstate.alarmLow) soundAlarm();  // NHAN: don't sound alarm when low batt here. Low batt is check before this loop
-            else PiezoEnable_SetLow();
+
+            if(!mstate.lowBattery)  // only check alarm when battery is not low
+            {
+                if(mstate.alarmHigh || mstate.alarmLow) soundAlarm();
+                else PiezoEnable_SetLow();
+            }            
         }
         if(stime.oneSecondFlag)
         {
             stime.oneSecondFlag = false;
-            GetAnalog();                        
-            CheckAlarms();
-            if(mstate.alarmHigh || mstate.alarmLow) mstate.displayActive = 1;
-            secondTimer();
+            GetAnalog();
+            if(!mstate.lowBattery)  // only check alarm when battery is not low
+            {
+                CheckAlarms();
+                if(mstate.alarmHigh || mstate.alarmLow) mstate.displayActive = 1;
+                secondTimer();
+            }
+            else
+            {
+                // Here when low battery, enable sleep mode and clear display
+                mstate.displayActive = 0;
+                mstate.sleepMode = 1;
+                mstate.displayClear = 1;
+                UpdateDisplay();
+            }            
         }
     }
 }
@@ -240,6 +206,7 @@ void Initialize(void) {
     ttime.s_minute = 1;
     ttime.s_second = 1;
 
+    mstate.lowBattery = 0;  // initially battery level should be normal
     mstate.menuLevel = MAINLEVEL;
     mstate.menuLine = EXIT;
     mstate.adjusting = 0;
@@ -317,6 +284,17 @@ void GetAnalog(void) {
     // TODO: disable sensor power after ADC conversion
 
     analog.battVolts = analog.rawVoltage * BAT_SCALE;
+    // Update battery state based on current voltage and previous state    
+    if((analog.battVolts < LOWBATTVOLTS) && !mstate.lowBattery)
+    {
+        mstate.lowBattery = 1;
+        return;
+    }
+    else if((analog.battVolts > LOWBATTVOLTS_HYSTERESIS) && mstate.lowBattery)
+    {
+        mstate.lowBattery = 0;
+    }   
+    
     //Now do calibration
     itemp = (int16_t) analog.rawPressure - eeconfig.POffset;
     ftemp1 = (float) (itemp * PRESS_SCALE); //ftemp1 result is in PSI
@@ -707,6 +685,13 @@ void UpdateDisplay(void) {
     }
         
     Display_Clear();    
+    
+    // When it's low battery, only display the symbol, then return
+    if(mstate.lowBattery)
+    {
+        WriteLowBattSymbol(3, 5);
+        return;
+    }
 
     switch (mstate.menuLevel) {
         case MAINLEVEL:
@@ -1304,7 +1289,7 @@ void sleep(void) {
     CPUDOZEbits.IDLEN = 0; //deep sleep
     SLEEP();
     WWDT_TimerClear();
-    delay_ms(100);
+    delay_ms(100);  // TODO: why delay here?
     if (PIR0bits.IOCIF == 1) {
         PIR0bits.IOCIF = 0;
 //        __debug_break();
@@ -1339,10 +1324,33 @@ void soundAlarm(void) //In case of an alarm, this routine is called every 100ms
     static uint8_t highDuty;
     static uint8_t lowPeriod;
     static uint8_t lowDuty;
-
+    
+//    if (mstate.lowBattery) {
+//        batPeriod++;
+//        if (batPeriod < 50) {
+//            batDuty++;
+//            if (batDuty < 2) {
+//                PiezoEnable_SetHigh();
+//            } else if (batDuty < 4) {
+//                PiezoEnable_SetLow();
+//            } else if (batDuty < 6) {
+//                PiezoEnable_SetHigh();
+//            } else if (batDuty < 8) {
+//                PiezoEnable_SetLow();
+//            } else if (batDuty < 10) {
+//                PiezoEnable_SetHigh();
+//            } else PiezoEnable_SetLow();
+//        } else {
+//            batPeriod = 0;
+//            batDuty = 0;
+//        }
+//    }   // End of low battery alarm
+//    else
+//    {
     if (mstate.alarmSilence || mstate.alarmLongSilence) {
         PiezoEnable_SetLow();
-    } else {
+    }
+    else {
         if (mstate.alarmHigh == 1) {
             highDuty++;
             if (highDuty < 5) {
@@ -1350,7 +1358,8 @@ void soundAlarm(void) //In case of an alarm, this routine is called every 100ms
             } else if (highDuty < 9) {
                 PiezoEnable_SetLow();
             } else highDuty = 0;
-        } else if (mstate.alarmLow == 1) {
+        }   // End of HP alarm 
+        else if (mstate.alarmLow == 1) {
             lowPeriod++;
             if (lowPeriod < 30) {
                 lowDuty++;
@@ -1365,35 +1374,15 @@ void soundAlarm(void) //In case of an alarm, this routine is called every 100ms
                 lowPeriod = 0;
                 lowDuty = 0;
             }
-        }
-        // NHAN: don't sound low batt alarm here
-//        else if (mstate.lowBattery) {
-//            batPeriod++;
-//            if (batPeriod < 50) {
-//                batDuty++;
-//                if (batDuty < 2) {
-//                    PiezoEnable_SetHigh();
-//                } else if (batDuty < 4) {
-//                    PiezoEnable_SetLow();
-//                } else if (batDuty < 6) {
-//                    PiezoEnable_SetHigh();
-//                } else if (batDuty < 8) {
-//                    PiezoEnable_SetLow();
-//                } else if (batDuty < 10) {
-//                    PiezoEnable_SetHigh();
-//                } else PiezoEnable_SetLow();
-//            } else {
-//                batPeriod = 0;
-//                batDuty = 0;
-//            }
-//        }
+        }   // End of LP alarm
     }
+//    }
 }
 
 void secondTimer(void) {
     static uint8_t dualPressButton = 0;
     static uint16_t longSleepCount = 0;
-
+         
     if (mstate.sleepMode) //If in sleep mode, this gets called every 4.096 seconds
     {
         displayCount += 4;
@@ -1439,7 +1428,7 @@ void secondTimer(void) {
     } else displayAlarmCount = 0;
 
     if (mstate.displayActive == 0) displayCount = 0;
-
+    
     // NHAN: check battery voltage, show low battery symbol when reaching voltage
 #ifdef SHOWLOWBATTSYMBOL
     if (analog.battVolts < NEARLOWBATTVOLTS) mstate.nearLowBattery = 1;
@@ -1490,6 +1479,22 @@ void alarmSilenceSet(void)
     mstate.alarmSilence = 1;
     mstate.alarmHigh = 0;
     mstate.alarmLow = 0;
+}
+
+// 3 quick chirps to indicate low battery
+void lowBattSound(void)
+{                
+    PiezoEnable_SetHigh();
+    delay_ms(50);
+    PiezoEnable_SetLow();
+    delay_ms(50);
+    PiezoEnable_SetHigh();
+    delay_ms(50);
+    PiezoEnable_SetLow();
+    delay_ms(50);
+    PiezoEnable_SetHigh();
+    delay_ms(50);
+    PiezoEnable_SetLow(); 
 }
 
 /**
