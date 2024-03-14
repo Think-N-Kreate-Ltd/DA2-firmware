@@ -971,16 +971,16 @@ void UpdateDisplay(void) {
                         if (ttime.s_am) 
                         {
                             sprintf(outstring, "%2d", ttime.sadj_hour);
-                            WriteLargeString(outstring, 3, 1);
-                            sprintf(outstring, " AM");
-                            WriteSmallString(outstring, 6, 9, 0);
+                            WriteLargeString(outstring, 3, 2);
+                            sprintf(outstring, "AM");
+                            WriteSmallString(outstring, 6, 12, 0);
                         }
                         else
                         {
                             sprintf(outstring, "%2d", ttime.sadj_hour);
-                            WriteLargeString(outstring, 3, 1);
-                            sprintf(outstring, " PM");
-                            WriteSmallString(outstring, 6, 9, 0);
+                            WriteLargeString(outstring, 3, 2);
+                            sprintf(outstring, "PM");
+                            WriteSmallString(outstring, 6, 12, 0);
                         }
                         //KRH Testing
                         //sprintf(outstring,"%02d %02d %02d %d,%d",ttime.h_debug,ttime.sadj_hour,ttime.sh_debug,ttime.am,ttime.s_am);
