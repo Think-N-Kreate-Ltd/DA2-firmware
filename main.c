@@ -100,15 +100,15 @@ void main(void) {
     Init_I2C1_rtcc();
     V5Enable_SetHigh();     //Enable display and sensor power
     DispInit();
-    DispBKLT_SetHigh();
+    DispBKLT_SetHigh();  
     Display_Clear();
     displayVersion();    
     delay_ms(1000);   // wait some time to read the version
     ii=0;
     jj=0;
     Display_Clear();
-    GetAnalog();    
-
+    GetAnalog();  
+    
     if(!DISP_SEL_GetValue()) 
     {
         initina2();
@@ -178,13 +178,13 @@ void main(void) {
             GetAnalog();
             if(!mstate.lowBattery)  // only check alarm when battery is not low
             {
-                CheckAlarms();
-                if(mstate.alarmHigh || mstate.alarmLow) mstate.displayActive = 1;
+                CheckAlarms();                
+//                if(mstate.alarmHigh || mstate.alarmLow) mstate.displayActive = 1;
                 secondTimer();
             }
             else
             {
-                // Here when low battery, enable sleep mode and clear display
+                // Here when low battery, enable sleep mode and clear display                
                 mstate.displayActive = 0;
                 mstate.sleepMode = 1;
                 mstate.displayClear = 1;
@@ -277,11 +277,15 @@ void GetAnalog(void) {
     float ftemp1, ftemp2;
     int16_t itemp;
 
-    V5Enable_SetHigh(); //Enable sensor power
-    delay_ms(200);
+    V5Enable_SetHigh(); // Enable sensor power
+    delay_ms(5);      // According to R1202 datasheet, soft start time is typically 2ms    
     analog.rawPressure = ADCC_GetSingleConversion(Pressure);
     analog.rawVoltage = ADCC_GetSingleConversion(Volts);
-    // TODO: disable sensor power after ADC conversion
+    
+    if(!mstate.displayActive)
+    {
+        V5Enable_SetLow();  // Turn off sensor power   
+    }
 
     analog.battVolts = analog.rawVoltage * BAT_SCALE;
     // Update battery state based on current voltage and previous state    
@@ -307,7 +311,6 @@ void GetAnalog(void) {
 //        __debug_break();
         analog.pressure = 0;    // set to 0 to prevent beeping when device is not yet connected to water system. See Bug ID 43.
     }
-    //if(!mstate.displayActive) V5Enable_SetLow();     //Enable sensor power
 }
 
 // Check battery voltage to detect low battery
@@ -346,8 +349,12 @@ void ScanPB(void)
 }
 
 void HandlePB(void) {
-    if (mstate.upPressed) {
+    if(mstate.buttonPressed && !mstate.displayActive)
+    {
         mstate.displayActive = 1;
+    }
+    
+    if (mstate.upPressed) {
         if ((mstate.alarmHigh || mstate.alarmLow) && mstate.menuLevel != MENULEVEL) { // NHAN: when inside menu, not able to silence
 //            if (mstate.alarmHigh || mstate.alarmLow) {
             alarmSilenceSet();          
@@ -441,7 +448,6 @@ void HandlePB(void) {
     }
 
     if (mstate.downPressed) {
-        mstate.displayActive = 1;
         if ((mstate.alarmHigh || mstate.alarmLow) && mstate.menuLevel != MENULEVEL) { // NHAN: when inside menu, not able to silence
 //        if (mstate.alarmHigh || mstate.alarmLow) {
             alarmSilenceSet(); 
@@ -560,9 +566,7 @@ void HandlePB(void) {
 //        if (mstate.alarmHigh || mstate.alarmLow) {
             alarmSilenceSet();
         }
-        if (mstate.displayActive == 0) {
-            mstate.displayActive = 1;
-        } else if (mstate.menuLevel == MAINLEVEL) {
+        if (mstate.menuLevel == MAINLEVEL) {
             mstate.menuLevel = MENULEVEL;
             mstate.menuLine = EXIT;
         } else if (mstate.adjusting) mstate.adjusting = 0;
@@ -676,12 +680,12 @@ void UpdateDisplay(void) {
             Display_Clear();
             mstate.displayClear = 0;
         }
-        DispBKLT_SetLow();
+        DispBKLT_SetLow();                   
         V5Enable_SetLow(); //Disable sensor power
         return;
     } else {
         V5Enable_SetHigh(); //Enable display and sensor power
-        DispBKLT_SetHigh();
+        DispBKLT_SetHigh();          
     }
         
     Display_Clear();    
@@ -1297,7 +1301,7 @@ void sleep(void) {
     }
 }
 
-void wake(void) {
+void wake(void) {    
     WWDT_TimerClear();
 //    IOCBFbits.IOCBF3 = 0;
 //    IOCBFbits.IOCBF4 = 0;
@@ -1392,7 +1396,7 @@ void secondTimer(void) {
 
         if (mstate.alarmLongSilence) longSleepCount += 4;
     } else {
-        displayCount++;
+        displayCount++; // TODO: after HP > display off, we should not increment this anymore
         displayAlarmCount++;
         if (BTN_DOWN_GetValue() && BTN_UP_GetValue()) dualPressButton++;
         else dualPressButton = 0;
@@ -1412,14 +1416,14 @@ void secondTimer(void) {
     // NHAN: sleep even at menu screens. See Bug ID 16
     //    if(mstate.menuLevel != MAINLEVEL) displayCount = 0; //If in menu mode don't go to sleep
 
-    if (displayCount > DISPLAYTIMEOUT) {
+    if (displayCount > DISPLAYTIMEOUT) {        
         mstate.displayActive = 0;
         mstate.sleepMode = 1;
         mstate.displayClear = 1;
         UpdateDisplay();
     }
     if (mstate.alarmHigh || mstate.alarmLow) {
-        if (displayAlarmCount > ALARMDISPTIMEOUT) {
+        if ((displayAlarmCount > ALARMDISPTIMEOUT) && mstate.displayActive) {
             mstate.displayActive = 0;
             mstate.displayClear = 1;
             UpdateDisplay();
