@@ -45,7 +45,7 @@
 #include <xc.h> // include processor files - each processor file is guarded.  
 #include "mcc_generated_files/mcc.h"
 
-const char FIRMWARE_VERSION_STRING[] = "v1.3.1";   // NHAN: show firmware version on device power on
+const char FIRMWARE_VERSION_STRING[] = "v1.3.2";   // NHAN: show firmware version on device power on
 
 #define DAQ_SCALE   0.002       //10bits equals 2.048v (vref) and DAQ_SCALE = (2.048/1025) = 0.002 volts per count
 #define BAT_SCALE   0.004       //Bat volts is 2x analog input of 500cnts/v -> cnts*0.004=bat volts
@@ -54,8 +54,9 @@ const char FIRMWARE_VERSION_STRING[] = "v1.3.1";   // NHAN: show firmware versio
 #define DEF_PRESS_OFFSET 14.7
 #define SLOPESTEP        0.01
 
-#define LOWBATTVOLTS        2.55 // actual low battery level, only do 3 quick chirps
-#define SHOWLOWBATTSYMBOL           // to show low battery symbol or not
+#define LOWBATTVOLTS                2.75    // actual low battery level, only do 3 quick chirps
+#define LOWBATTVOLTS_HYSTERESIS     2.8     // Use this to prevent oscilatting when Vbatt is fluctuating around `LOWBATTVOTLS`
+//#define SHOWLOWBATTSYMBOL           // to show low battery symbol or not
 #ifdef SHOWLOWBATTSYMBOL
 #define NEARLOWBATTVOLTS    2.7  // show low battery symbol when reaching this voltage, a little above low battery level
 #endif
@@ -237,5 +238,6 @@ void secondTimer(void);
 void buzzer12hSilence(void);
 void displayVersion(void);
 void alarmSilenceSet(void);
+void lowBattSound(void);
 #endif	/* XC_HEADER_TEMPLATE_H */
 
