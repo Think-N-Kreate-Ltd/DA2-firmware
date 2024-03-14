@@ -45,7 +45,7 @@
 #include <xc.h> // include processor files - each processor file is guarded.  
 #include "mcc_generated_files/mcc.h"
 
-const char FIRMWARE_VERSION_STRING[] = "v1.3.2";   // NHAN: show firmware version on device power on
+const char FIRMWARE_VERSION_STRING[] = "v1.3.3";   // NHAN: show firmware version on device power on
 
 #define DAQ_SCALE   0.002       //10bits equals 2.048v (vref) and DAQ_SCALE = (2.048/1025) = 0.002 volts per count
 #define BAT_SCALE   0.004       //Bat volts is 2x analog input of 500cnts/v -> cnts*0.004=bat volts
@@ -69,7 +69,7 @@ const char FIRMWARE_VERSION_STRING[] = "v1.3.2";   // NHAN: show firmware versio
 #define CLEARLONGSILENT     600          //Alarm sound back on after 10 minutes
 #else
 #define DISPLAYTIMEOUT      60          // Display off after 1 minute of inactivity
-#define ALARMDISPTIMEOUT    60          // Leave display on for 1 minute after an alarm is triggered        
+#define ALARMDISPTIMEOUT    60          // Leave display on for 1 minute after an alarm is triggered    
 #define CLEARSHORTSILENT    30          // Alarm sound back on after this number of seconds
 #define CLEARLONGSILENT     43200       // Alarm sound back on after 12 hours
 #define ALARM_ACTIVATE_TIMEOUT  3       // pressure has to be out of limits for this amount of seconds to activate
