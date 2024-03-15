@@ -75,12 +75,23 @@ const char FIRMWARE_VERSION_STRING[] = "v1.4.0";   // NHAN: show firmware versio
 #define ALARM_ACTIVATE_TIMEOUT  3       // pressure has to be out of limits for this amount of seconds to activate
 #endif
 
+// NOTE: device configurations are saved starting from address 0x0000.
+// Therefore, do not use memory address from 0x0000 - (eeconfig last byte address).
+// Otherwise, new data will override the configurations.
 #define FIRST_WRITE_EEDATA      0xAA    // Indicator that EE has been written after initial programming
 #define ALARM_TOTAL_ADDRESS     0x0025  // EE address to save alarm index, i.e. `lastAlarm`
 #define ALARM_BASE_ADDRESS      0x0030  // Alarm logging start address
 #define ALARM_SIZE              10      // Alarms are 10 bytes in length
 #define MAX_ADDRESS             0x1022  // EE memory range ends here
 #define MAX_EE_ALARMS           90      // Maximum number of alarms to save. Start overwriting at the beginning.
+// Let's say 90 alarm event to be saved.
+// Starting address of the first event is 0x0030.
+// Each alarm event is 10 bytes in length.
+// => Next available address is: 0x0030 + [(90*10) to HEX, which is 384] = 0x03B4.
+// Choose 0x03C4 as the address for the next data to be saved, which will leave some bytes between this data and the 90th alarm event.
+#define EE_MAX_PRESSURE_ADDRESS 0x03C4  // EE address to save Max pressure event, 9 bytes in length
+#define EE_MIN_PRESSURE_ADDRESS 0x03D4  // EE address to save Min pressure event, 9 bytes in length
+#define PRESSURE_EMPTY          -1     // used to indicate pressure value is empty
 
 //Menu Levels
 #define MAINLEVEL   0
@@ -191,6 +202,17 @@ struct EEPROMALARM
     
 } alarm,readAlarm;
 
+struct EEPROM_MAXMINPRESSURE {
+    uint8_t     year;
+    uint8_t     month;
+    uint8_t     day;
+    uint8_t     hour;
+    uint8_t     min;
+    uint8_t     sec;
+    uint8_t     am;
+    int16_t     pressure;
+} maxPressure, minPressure;
+
 struct PRESSVOLTS {
     adc_result_t rawPressure;
     adc_result_t rawVoltage;
@@ -224,6 +246,7 @@ struct MSTATE {
     uint8_t menuPressed;
     uint8_t downPressed;
     uint8_t adjusting;
+    uint8_t adjusted;       // to indicate that some action has been performed, e.g. reset Max/Min pressure
     uint8_t updateDisplay;
     uint8_t buttonPressed;
     uint8_t pastAlarm;
@@ -246,6 +269,8 @@ void ReadEESetup(void);
 void SaveAlarm(uint8_t alarmType);
 void WriteAlarmEE(uint16_t add);
 void ReadAlarmEE(uint16_t add);
+void WritePressureEventEE(uint16_t add);
+void ReadPressureEventEE(uint16_t add);
 void CheckAlarms(void);
 void GetAlarmEE(uint8_t num);
 void ClearAlarmEE(void);
