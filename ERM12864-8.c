@@ -25,6 +25,8 @@ void Write15SmallString(char *string, unsigned char line, unsigned char column, 
         tout = *string;
 //        if (tout == 38) tout = 1;              // "&"
         if (tout == 46) tout = 2;         // "." 
+        else if (tout == 91) tout = 47; // UP symbol
+        else if (tout == 93) tout = 48; // DOWN symbol
         else {
             tout -= 44;
             if(tout < 0) tout = 0;                          //No ascii below "."

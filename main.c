@@ -208,7 +208,7 @@ void Initialize(void) {
 
     mstate.lowBattery = 0;  // initially battery level should be normal
     mstate.menuLevel = MAINLEVEL;
-    mstate.menuLine = EXIT;
+    mstate.menuLine = EXITMAIN;
     mstate.adjusting = 0;
     mstate.alarmHigh = 0;
     mstate.alarmLow = 0;
@@ -391,13 +391,13 @@ void HandlePB(void) {
                         break;
                     case CAL_LOW:
                         verify = 0;
-                        mstate.menuLine = EXIT;
+                        mstate.menuLine = EXITMAIN;
                         mstate.adjusting = 0;
                         break;
                     case CAL_HIGH:
                         if (verified == 0) {
                             verify = 0;
-                            mstate.menuLine = EXIT;
+                            mstate.menuLine = EXITMAIN;
                         } else eeconfig.PSlope += SLOPESTEP;
                         break;
                     default:
@@ -472,7 +472,7 @@ void HandlePB(void) {
          */
         mstate.updateDisplay = 1;
         if (mstate.adjusting) {
-            if (mstate.menuLevel == MENULEVEL) {
+            if (mstate.menuLevel == MENULEVEL) {    // main menu, adjusting
                 switch (mstate.menuLine) {
                     case PAST:
                         if (mstate.pastAlarm > 0) mstate.pastAlarm--;
@@ -500,7 +500,7 @@ void HandlePB(void) {
                     default:
                         break;
                 }
-            } else {
+            } else if(mstate.menuLevel == TIMELEVEL) {  // time menu, adjusting
                 ttime.new_time = 1;
                 switch (mstate.menuLine) {
                     case YEAR:
@@ -534,12 +534,33 @@ void HandlePB(void) {
                         break;
                 }
             }
+            else if(mstate.menuLevel == MAXMINLEVEL)  // Max Min menu, adjusting
+            {
+                switch(mstate.menuLine)
+                {
+                    case MAX_PRESSURE:
+                        // TODO: reset Max pressure
+                        break;
+                    case MIN_PRESSURE:
+                        // TODO: reset Min pressure
+                        break;
+                    default:
+                        break;
+                }
+            }
         } else {
             mstate.menuLine++;
             if (mstate.menuLevel == MENULEVEL) {
                 if (mstate.menuLine > LASTMENULINE) mstate.menuLine = 1;
-            } else {
+            } else if (mstate.menuLevel == TIMELEVEL) {
                 if (mstate.menuLine > LASTTIMELINE) mstate.menuLine = 1;
+            }
+            else if (mstate.menuLevel == MAXMINLEVEL) {
+                if (mstate.menuLine > LASTMAXMINLINE) mstate.menuLine = 1;
+            }
+            else {
+                // When having new menus, need to handle
+                __debug_break();
             }
         }
         //mstate.downPressed = 0;
@@ -568,13 +589,13 @@ void HandlePB(void) {
         }
         if (mstate.menuLevel == MAINLEVEL) {
             mstate.menuLevel = MENULEVEL;
-            mstate.menuLine = EXIT;
+            mstate.menuLine = EXITMAIN;
         } else if (mstate.adjusting) mstate.adjusting = 0;
         else //case not adjusting
         {
-            if (mstate.menuLevel == MENULEVEL) {
+            if (mstate.menuLevel == MENULEVEL) {    // main menu, not adjusting
                 switch (mstate.menuLine) {
-                    case EXIT:
+                    case EXITMAIN:
                         mstate.menuLevel = MAINLEVEL;
                         mstate.menuMode = 0;
                         SaveEESetup();
@@ -629,12 +650,17 @@ void HandlePB(void) {
                         break;
                     case CLEAR:
                         ClearAlarmEE();
-                        mstate.menuLine = EXIT;
+                        mstate.menuLine = EXITMAIN;
+                        break;
+                    case MAX_MIN_PRESSURE:
+                        mstate.menuLevel = MAXMINLEVEL;
+                        mstate.menuLine = EXITMAXMIN;
+                        // TODO: get the max and min from EEPROM and save to some variables                        
                         break;
                     default:
                         break;
                 }
-            } else //TIMELEVEL
+            } else if(mstate.menuLevel == TIMELEVEL)    // Time menu, not adjusting
             {
                 switch (mstate.menuLine) {
                     case EXITTIME:
@@ -644,7 +670,7 @@ void HandlePB(void) {
                             SetTime();
                             ttime.new_time = 0;
                         }
-                        mstate.menuLine = EXIT;
+                        mstate.menuLine = EXITMAIN;
                         break;
                     case YEAR:
                     case MONTH:
@@ -657,6 +683,28 @@ void HandlePB(void) {
                     default:
                         break;
                 }
+            }
+            else if(mstate.menuLevel == MAXMINLEVEL)    // Max Min menu, not adjusting
+            {
+                switch(mstate.menuLine)
+                {
+                    case EXITMAXMIN:
+                        mstate.menuLevel = MENULEVEL;
+                        mstate.adjusting = 0;
+                        mstate.menuLine = EXITMAIN;
+                        break;
+                    case MAX_PRESSURE:
+                    case MIN_PRESSURE:
+                        mstate.adjusting = 1;
+                        break;
+                    default:
+                        break;                                                     
+                }
+            }
+            else
+            {
+                // When having more menus, this should be handled
+                __debug_break();
             }
         }
         //mstate.menuPressed = 0;
@@ -1016,6 +1064,52 @@ void UpdateDisplay(void) {
                 
                 // NHAN: add symbol to indicate that we're in "SET TIME" menu
                 Write15Bitmap(V_testBitmap, 40, 40, 1, 75);
+            }
+            break;
+        case MAXMINLEVEL:
+            if(mstate.adjusting) {
+                switch(mstate.menuLine) {
+                    case MAX_PRESSURE:
+                        // Instructions
+                        sprintf(outstring, "ENT:BACK ]:RESET");
+                        WriteSmallString(outstring, 0, 0, 0); 
+
+                        // Max pressure
+                        sprintf(outstring, "MAX");
+                        WriteSmallString(outstring, 2, 0, 0);
+                        sprintf(outstring, "123");
+                        WriteLargeString(outstring, 2, 1);
+                        sprintf(outstring, "PSI");
+                        WriteSmallString(outstring, 5, 13, 0);
+                        sprintf(outstring, "@ 03/14/24 07:29PM");
+                        WriteSmallString(outstring, 7, 0, 0);                            
+                        break;
+                    case MIN_PRESSURE:
+                        // Instructions
+                        sprintf(outstring, "ENT:BACK ]:RESET");
+                        WriteSmallString(outstring, 0, 0, 0); 
+
+                        // Max pressure
+                        sprintf(outstring, "MIN");
+                        WriteSmallString(outstring, 2, 0, 0);
+                        sprintf(outstring, " 12");
+                        WriteLargeString(outstring, 2, 1);
+                        sprintf(outstring, "PSI");
+                        WriteSmallString(outstring, 5, 13, 0);
+                        sprintf(outstring, "@ 03/14/24 07:29PM");
+                        WriteSmallString(outstring, 7, 0, 0);                            
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else {
+                for (ii = 1; ii < MAXMAXMINSTRING; ii++) {
+                    if (ii == mstate.menuLine)
+                        WriteSmallString(MaxMinString[ii], ii, 0, 1);
+                    else
+                        WriteSmallString(MaxMinString[ii], ii, 0, 0);
+                }
             }
             break;
         default:

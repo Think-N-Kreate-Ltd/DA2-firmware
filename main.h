@@ -45,7 +45,7 @@
 #include <xc.h> // include processor files - each processor file is guarded.  
 #include "mcc_generated_files/mcc.h"
 
-const char FIRMWARE_VERSION_STRING[] = "v1.3.3";   // NHAN: show firmware version on device power on
+const char FIRMWARE_VERSION_STRING[] = "v1.4.0";   // NHAN: show firmware version on device power on
 
 #define DAQ_SCALE   0.002       //10bits equals 2.048v (vref) and DAQ_SCALE = (2.048/1025) = 0.002 volts per count
 #define BAT_SCALE   0.004       //Bat volts is 2x analog input of 500cnts/v -> cnts*0.004=bat volts
@@ -86,9 +86,10 @@ const char FIRMWARE_VERSION_STRING[] = "v1.3.3";   // NHAN: show firmware versio
 #define MAINLEVEL   0
 #define MENULEVEL   1
 #define TIMELEVEL   2
+#define MAXMINLEVEL 3
 
 //MenuLevel
-#define EXIT        1
+#define EXITMAIN    1
 #define PAST        102 // 2
 #define HIGHTHRESH  2
 #define LOWTHRESH   3 // 3
@@ -97,8 +98,9 @@ const char FIRMWARE_VERSION_STRING[] = "v1.3.3";   // NHAN: show firmware versio
 #define CANCEL_12H  6   // 6
 #define TIME        7   // 7
 #define CLEAR       108 // 8
+#define MAX_MIN_PRESSURE 8  // capture max and min pressure, see Bug ID 28
 
-#define LASTMENULINE 7
+#define LASTMENULINE 8
 
 //Time Adust Level
 #define EXITTIME    1
@@ -111,7 +113,12 @@ const char FIRMWARE_VERSION_STRING[] = "v1.3.3";   // NHAN: show firmware versio
 
 #define LASTTIMELINE    7      //Last menu item
 
+// Max Min Level
+#define EXITMAXMIN      1
+#define MAX_PRESSURE    2
+#define MIN_PRESSURE    3
 
+#define LASTMAXMINLINE  3
 
 static char * MenuString[] = 
 {
@@ -125,9 +132,10 @@ static char * MenuString[] =
     "CANCEL 12H SLEEP ",
     "SET TIME         ",  
 //    "CLEAR ALARM HIST "
+    "MAX/MIN PRESSURE ",
 };
 
-#define MAXMENUSTRING 8 // 10
+#define MAXMENUSTRING 9 // 10
 
 static char * TimeString[] = 
 {
@@ -142,6 +150,16 @@ static char * TimeString[] =
 };
 
 #define MAXTIMESTRING   8
+
+static char * MaxMinString[] =
+{
+    "            ",
+    "<BACK       ",
+    "MAX PRESSURE",
+    "MIN PRESSURE",
+};
+
+#define MAXMAXMINSTRING 4
 
 struct STATETIME {
     uint32_t    timecount;            //basic 100 ms counter
