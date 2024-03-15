@@ -208,8 +208,9 @@ void Initialize(void) {
 
     mstate.lowBattery = 0;  // initially battery level should be normal
     mstate.menuLevel = MAINLEVEL;
-    mstate.menuLine = EXIT;
+    mstate.menuLine = EXITMAIN;
     mstate.adjusting = 0;
+    mstate.adjusted = 0;
     mstate.alarmHigh = 0;
     mstate.alarmLow = 0;
     mstate.alarmSilence = 0;
@@ -256,10 +257,35 @@ void Initialize(void) {
         
         // NHAN: update `lastAlarm` index, which is saved at `ALARM_TOTAL_ADDRESS`
         DATAEE_WriteByte(ALARM_TOTAL_ADDRESS, lastAlarm);
+        
+        // Initialize Max and Min pressure data
+        maxPressure.year = 24;
+        maxPressure.month = 1;
+        maxPressure.day = 1;
+        maxPressure.hour = 0;
+        maxPressure.min = 0;
+        maxPressure.sec = 0;
+        maxPressure.am = 1;
+        maxPressure.pressure = PRESSURE_EMPTY;    // to indicate that data is empty
+        WritePressureEventEE(EE_MAX_PRESSURE_ADDRESS);
+        
+        minPressure.year = 24;
+        minPressure.month = 1;
+        minPressure.day = 1;
+        minPressure.hour = 0;
+        minPressure.min = 0;
+        minPressure.sec = 0;
+        minPressure.am = 1;
+        minPressure.pressure = PRESSURE_EMPTY;    // to indicate that data is empty
+        WritePressureEventEE(EE_MIN_PRESSURE_ADDRESS);
     }
 
     //Load latest alarm location
     lastAlarm = DATAEE_ReadByte(ALARM_TOTAL_ADDRESS);
+    
+    // Load Max and Min pressure data from EE
+    ReadPressureEventEE(EE_MAX_PRESSURE_ADDRESS);
+    ReadPressureEventEE(EE_MIN_PRESSURE_ADDRESS);
 }
 
 uint16_t GetRefAnalog(void) {
@@ -355,7 +381,7 @@ void HandlePB(void) {
     }
     
     if (mstate.upPressed) {
-        if ((mstate.alarmHigh || mstate.alarmLow) && mstate.menuLevel != MENULEVEL) { // NHAN: when inside menu, not able to silence
+        if ((mstate.alarmHigh || mstate.alarmLow) && (mstate.menuLevel == MAINLEVEL)) { // NHAN: when inside menu, not able to silence
 //            if (mstate.alarmHigh || mstate.alarmLow) {
             alarmSilenceSet();          
         }
@@ -391,13 +417,13 @@ void HandlePB(void) {
                         break;
                     case CAL_LOW:
                         verify = 0;
-                        mstate.menuLine = EXIT;
+                        mstate.menuLine = EXITMAIN;
                         mstate.adjusting = 0;
                         break;
                     case CAL_HIGH:
                         if (verified == 0) {
                             verify = 0;
-                            mstate.menuLine = EXIT;
+                            mstate.menuLine = EXITMAIN;
                         } else eeconfig.PSlope += SLOPESTEP;
                         break;
                     default:
@@ -448,7 +474,7 @@ void HandlePB(void) {
     }
 
     if (mstate.downPressed) {
-        if ((mstate.alarmHigh || mstate.alarmLow) && mstate.menuLevel != MENULEVEL) { // NHAN: when inside menu, not able to silence
+        if ((mstate.alarmHigh || mstate.alarmLow) && (mstate.menuLevel == MAINLEVEL)) { // NHAN: when inside menu, not able to silence
 //        if (mstate.alarmHigh || mstate.alarmLow) {
             alarmSilenceSet(); 
         }
@@ -472,7 +498,7 @@ void HandlePB(void) {
          */
         mstate.updateDisplay = 1;
         if (mstate.adjusting) {
-            if (mstate.menuLevel == MENULEVEL) {
+            if (mstate.menuLevel == MENULEVEL) {    // main menu, adjusting
                 switch (mstate.menuLine) {
                     case PAST:
                         if (mstate.pastAlarm > 0) mstate.pastAlarm--;
@@ -500,7 +526,7 @@ void HandlePB(void) {
                     default:
                         break;
                 }
-            } else {
+            } else if(mstate.menuLevel == TIMELEVEL) {  // time menu, adjusting
                 ttime.new_time = 1;
                 switch (mstate.menuLine) {
                     case YEAR:
@@ -534,12 +560,51 @@ void HandlePB(void) {
                         break;
                 }
             }
+            else if(mstate.menuLevel == MAXMINLEVEL)  // Max Min menu, adjusting
+            {
+                switch(mstate.menuLine)
+                {
+                    case MAX_PRESSURE:
+                        maxPressure.year = 24;
+                        maxPressure.month = 1;
+                        maxPressure.day = 1;
+                        maxPressure.hour = 0;
+                        maxPressure.min = 0;
+                        maxPressure.sec = 0;
+                        maxPressure.am = 1;
+                        maxPressure.pressure = PRESSURE_EMPTY;    // to indicate that data is empty
+                        WritePressureEventEE(EE_MAX_PRESSURE_ADDRESS);
+                        mstate.adjusted = 1;
+                        break;
+                    case MIN_PRESSURE:
+                        minPressure.year = 24;
+                        minPressure.month = 1;
+                        minPressure.day = 1;
+                        minPressure.hour = 0;
+                        minPressure.min = 0;
+                        minPressure.sec = 0;
+                        minPressure.am = 1;
+                        minPressure.pressure = PRESSURE_EMPTY;    // to indicate that data is empty
+                        WritePressureEventEE(EE_MIN_PRESSURE_ADDRESS);
+                        mstate.adjusted = 1;
+                        break;
+                    default:
+                        break;
+                }
+            }
         } else {
             mstate.menuLine++;
             if (mstate.menuLevel == MENULEVEL) {
                 if (mstate.menuLine > LASTMENULINE) mstate.menuLine = 1;
-            } else {
+            } else if (mstate.menuLevel == TIMELEVEL) {
                 if (mstate.menuLine > LASTTIMELINE) mstate.menuLine = 1;
+            }
+            else if (mstate.menuLevel == MAXMINLEVEL) {
+                if (mstate.menuLine > LASTMAXMINLINE) mstate.menuLine = 1;
+            }
+            else {
+                // When having new menus, need to handle
+                __debug_break();
             }
         }
         //mstate.downPressed = 0;
@@ -562,19 +627,19 @@ void HandlePB(void) {
          */
 
         mstate.updateDisplay = 1;
-        if ((mstate.alarmHigh || mstate.alarmLow) && mstate.menuLevel != MENULEVEL) { // NHAN: when inside menu, not able to silence
+        if ((mstate.alarmHigh || mstate.alarmLow) && (mstate.menuLevel == MAINLEVEL)) { // NHAN: when inside menu, not able to silence
 //        if (mstate.alarmHigh || mstate.alarmLow) {
             alarmSilenceSet();
         }
         if (mstate.menuLevel == MAINLEVEL) {
             mstate.menuLevel = MENULEVEL;
-            mstate.menuLine = EXIT;
+            mstate.menuLine = EXITMAIN;
         } else if (mstate.adjusting) mstate.adjusting = 0;
         else //case not adjusting
         {
-            if (mstate.menuLevel == MENULEVEL) {
+            if (mstate.menuLevel == MENULEVEL) {    // main menu, not adjusting
                 switch (mstate.menuLine) {
-                    case EXIT:
+                    case EXITMAIN:
                         mstate.menuLevel = MAINLEVEL;
                         mstate.menuMode = 0;
                         SaveEESetup();
@@ -629,12 +694,18 @@ void HandlePB(void) {
                         break;
                     case CLEAR:
                         ClearAlarmEE();
-                        mstate.menuLine = EXIT;
+                        mstate.menuLine = EXITMAIN;
+                        break;
+                    case MAX_MIN_PRESSURE:
+                        mstate.menuLevel = MAXMINLEVEL;
+                        mstate.menuLine = EXITMAXMIN;                        
+                        ReadPressureEventEE(EE_MAX_PRESSURE_ADDRESS);
+                        ReadPressureEventEE(EE_MIN_PRESSURE_ADDRESS);                        
                         break;
                     default:
                         break;
                 }
-            } else //TIMELEVEL
+            } else if(mstate.menuLevel == TIMELEVEL)    // Time menu, not adjusting
             {
                 switch (mstate.menuLine) {
                     case EXITTIME:
@@ -644,7 +715,7 @@ void HandlePB(void) {
                             SetTime();
                             ttime.new_time = 0;
                         }
-                        mstate.menuLine = EXIT;
+                        mstate.menuLine = EXITMAIN;
                         break;
                     case YEAR:
                     case MONTH:
@@ -657,6 +728,28 @@ void HandlePB(void) {
                     default:
                         break;
                 }
+            }
+            else if(mstate.menuLevel == MAXMINLEVEL)    // Max Min menu, not adjusting
+            {
+                switch(mstate.menuLine)
+                {
+                    case EXITMAXMIN:
+                        mstate.menuLevel = MENULEVEL;
+                        mstate.adjusting = 0;
+                        mstate.menuLine = EXITMAIN;
+                        break;
+                    case MAX_PRESSURE:
+                    case MIN_PRESSURE:
+                        mstate.adjusting = 1;
+                        break;
+                    default:
+                        break;                                                     
+                }
+            }
+            else
+            {
+                // When having more menus, this should be handled
+                __debug_break();
             }
         }
         //mstate.menuPressed = 0;
@@ -1018,6 +1111,79 @@ void UpdateDisplay(void) {
                 Write15Bitmap(V_testBitmap, 40, 40, 1, 75);
             }
             break;
+        case MAXMINLEVEL:
+            if(mstate.adjusting) {
+                if(mstate.adjusted) {
+                    WriteSmallString("RESET SUCCESS", 4, 2, 0);
+                    mstate.adjusted = 0;
+                    mstate.adjusting = 0;
+                }
+                else {
+                    switch(mstate.menuLine) {
+                        case MAX_PRESSURE:
+                            // Instructions
+                            sprintf(outstring, "ENT:BACK ]:RESET");
+                            WriteSmallString(outstring, 0, 0, 0); 
+
+                            // Max pressure
+                            sprintf(outstring, "MAX");
+                            WriteSmallString(outstring, 2, 0, 0);
+                            if(maxPressure.pressure >= 0) {
+                                sprintf(outstring, "%3d", maxPressure.pressure);
+                            }
+                            else {
+                                // data is empty, write "---"
+                                sprintf(outstring, "---");
+                            }                        
+                            WriteLargeString(outstring, 2, 1);
+                            sprintf(outstring, "PSI");
+                            WriteSmallString(outstring, 5, 13, 0);
+                            if (maxPressure.am) { // AM
+                                sprintf(outstring, "@ %02d/%02d/%02d %02d:%02dAM", maxPressure.month, maxPressure.day, maxPressure.year, maxPressure.hour, maxPressure.min);
+                            } else { // PM
+                                sprintf(outstring, "@ %02d/%02d/%02d %02d:%02dPM", maxPressure.month, maxPressure.day, maxPressure.year, maxPressure.hour, maxPressure.min);
+                            }
+                            WriteSmallString(outstring, 7, 0, 0);                           
+                            break;
+                        case MIN_PRESSURE:
+                            // Instructions
+                            sprintf(outstring, "ENT:BACK ]:RESET");
+                            WriteSmallString(outstring, 0, 0, 0); 
+
+                            // Max pressure
+                            sprintf(outstring, "MIN");
+                            WriteSmallString(outstring, 2, 0, 0);
+                            if(minPressure.pressure >= 0) {
+                                sprintf(outstring, "%3d", minPressure.pressure);
+                            }
+                            else {
+                                // data is empty, write "---"
+                                sprintf(outstring, "---");
+                            }                        
+                            WriteLargeString(outstring, 2, 1);
+                            sprintf(outstring, "PSI");
+                            WriteSmallString(outstring, 5, 13, 0);
+                            if (minPressure.am) { // AM
+                                sprintf(outstring, "@ %02d/%02d/%02d %02d:%02dAM", minPressure.month, minPressure.day, minPressure.year, minPressure.hour, minPressure.min);
+                            } else { // PM
+                                sprintf(outstring, "@ %02d/%02d/%02d %02d:%02dPM", minPressure.month, minPressure.day, minPressure.year, minPressure.hour, minPressure.min);
+                            }
+                            WriteSmallString(outstring, 7, 0, 0);                              
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+            else {
+                for (ii = 1; ii < MAXMAXMINSTRING; ii++) {
+                    if (ii == mstate.menuLine)
+                        WriteSmallString(MaxMinString[ii], ii, 0, 1);
+                    else
+                        WriteSmallString(MaxMinString[ii], ii, 0, 0);
+                }
+            }
+            break;
         default:
             break;
     }
@@ -1135,6 +1301,66 @@ void ReadAlarmEE(uint16_t add) {
         *data++ = DATAEE_ReadByte(eeaddress++);
 }
 
+/* Write configured pressure event to EEPROM */
+// Used to write Max and Min pressure events,
+// but could be used for other types of event in the future.
+void WritePressureEventEE(uint16_t add) {
+    uint16_t len;
+    uint16_t eeaddress;
+    void *ptr;
+    uint8_t *data;
+
+    if(add == EE_MAX_PRESSURE_ADDRESS){
+        ptr = &maxPressure;
+        len = sizeof(maxPressure);
+    }
+    else if(add == EE_MIN_PRESSURE_ADDRESS){
+        ptr = &minPressure;
+        len = sizeof(minPressure);
+    }
+    else{
+        __debug_break();
+        // Not handle yet
+    }
+    
+    data = ptr;
+    
+    eeaddress = add;
+
+    while (len--) { //Now write the data
+        DATAEE_WriteByte(eeaddress++, *data++);
+    }
+}
+
+/* Read saved pressure event from EEPROM */
+// Used to retrieve Max and Min pressure events,
+// but could be used for other types of event in the future.
+void ReadPressureEventEE(uint16_t add) {
+    uint16_t len;
+    uint16_t eeaddress;
+    void *ptr;
+    uint8_t *data;
+    
+    if(add == EE_MAX_PRESSURE_ADDRESS){
+        ptr = &maxPressure;
+        len = sizeof(maxPressure);
+    }
+    else if(add == EE_MIN_PRESSURE_ADDRESS){
+        ptr = &minPressure;
+        len = sizeof(minPressure);
+    }
+    else{
+        __debug_break();
+        // Not handle yet
+    }
+    
+    data = ptr;
+    eeaddress = add;
+
+    while (len--)
+        *data++ = DATAEE_ReadByte(eeaddress++);
+}
+
 void CheckAlarms(void) {
     // TODO: disable LED flashing to further reduce sleep current
     // LED1 blinks to indicate that we are checking alarm
@@ -1233,6 +1459,38 @@ void CheckAlarms(void) {
         // NHAN: here should be normal
         alarmState = AlarmOKAY;
         mstate.alarmElapsedTime = 0;
+    }
+    
+    // Check if new Max/Min pressure value is recorded
+    if((analog.pressure > maxPressure.pressure) || (maxPressure.pressure == PRESSURE_EMPTY)) {        
+        __debug_break();
+        GetTime();
+        maxPressure.year = (uint8_t) (ttime.year - 2000);
+        maxPressure.month = ttime.month;
+        maxPressure.day = ttime.day;        
+        maxPressure.hour = (uint8_t) ttime.hour;
+        maxPressure.min = ttime.minute;
+        maxPressure.sec = ttime.second;
+        maxPressure.am = ttime.am;
+        maxPressure.pressure = analog.pressure;
+        WritePressureEventEE(EE_MAX_PRESSURE_ADDRESS);
+    }
+    else if((analog.pressure < minPressure.pressure) || (minPressure.pressure == PRESSURE_EMPTY)) {
+        __debug_break();
+        GetTime();
+        minPressure.year = (uint8_t) (ttime.year - 2000);
+        minPressure.month = ttime.month;
+        minPressure.day = ttime.day;        
+        minPressure.hour = (uint8_t) ttime.hour;
+        minPressure.min = ttime.minute;
+        minPressure.sec = ttime.second;
+        minPressure.am = ttime.am;
+        minPressure.pressure = analog.pressure;
+        WritePressureEventEE(EE_MIN_PRESSURE_ADDRESS);
+    }
+    else {
+        // Current pressure is within Max and Min,
+        // no need to override
     }
 }
 
