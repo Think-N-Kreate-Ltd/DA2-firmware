@@ -1159,10 +1159,12 @@ void UpdateDisplay(void) {
             }
             break;
         case MAXMINLEVEL:
-            if(mstate.adjusted) {
-                WriteSmallString("CLEAR SUCCESS", 4, 2, 0);
-                mstate.adjusted = 0;
-                mstate.adjusting = 0;
+            if(mstate.adjusted) {                
+                if(!DisplayMessage("CLEAR SUCCESS", 4, 2)) {                               
+                    mstate.adjusted = 0;
+                    mstate.adjusting = 0;
+                    mstate.menuLine = EXITMAXMIN;
+                }  
             }
             else if(mstate.adjusting) {
                 switch(mstate.menuLine) {
