@@ -45,7 +45,7 @@
 #include <xc.h> // include processor files - each processor file is guarded.  
 #include "mcc_generated_files/mcc.h"
 
-const char FIRMWARE_VERSION_STRING[] = "v1.4.1";   // NHAN: show firmware version on device power on
+const char FIRMWARE_VERSION_STRING[] = "v1.4.2";   // NHAN: show firmware version on device power on
 
 #define DAQ_SCALE   0.002       //10bits equals 2.048v (vref) and DAQ_SCALE = (2.048/1025) = 0.002 volts per count
 #define BAT_SCALE   0.004       //Bat volts is 2x analog input of 500cnts/v -> cnts*0.004=bat volts
@@ -73,6 +73,7 @@ const char FIRMWARE_VERSION_STRING[] = "v1.4.1";   // NHAN: show firmware versio
 #define CLEARSHORTSILENT    30          // Alarm sound back on after this number of seconds
 #define CLEARLONGSILENT     43200       // Alarm sound back on after 12 hours
 #define ALARM_ACTIVATE_TIMEOUT  3       // pressure has to be out of limits for this amount of seconds to activate
+#define DISPLAY_MESSAGE_HOLDTIME 2      // Display message hold time, in seconds
 #endif
 
 // NOTE: device configurations are saved starting from address 0x0000.
@@ -108,10 +109,10 @@ const char FIRMWARE_VERSION_STRING[] = "v1.4.1";   // NHAN: show firmware versio
 #define CAL_HIGH    5 // 5
 #define CANCEL_12H  6   // 6
 #define TIME        7   // 7
-#define CLEAR       108 // 8
-#define MAX_MIN_PRESSURE 8  // capture max and min pressure, see Bug ID 28
+#define CLEAR       8 // 8
+#define MAX_MIN_PRESSURE 9  // capture max and min pressure, see Bug ID 28
 
-#define LASTMENULINE 8
+#define LASTMENULINE 9
 
 //Time Adust Level
 #define EXITTIME    1
@@ -143,11 +144,11 @@ static char * MenuString[] =
     "PRESSURE CAL HIGH",
     "CANCEL 12H SLEEP ",
     "SET TIME         ",  
-//    "CLEAR ALARM HIST "
+    "CLEAR ALARM HIST ",
     "MAX/MIN PRESSURE ",
 };
 
-#define MAXMENUSTRING 9 // 10
+#define MAXMENUSTRING 10 // 10
 
 static char * TimeString[] = 
 {
@@ -284,5 +285,6 @@ void buzzer12hSilence(void);
 void displayVersion(void);
 void alarmSilenceSet(void);
 void lowBattSound(void);
+bool DisplayMessage(char *msg, uint8_t line, uint8_t column);
 #endif	/* XC_HEADER_TEMPLATE_H */
 

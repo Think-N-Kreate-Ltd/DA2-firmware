@@ -706,9 +706,10 @@ void HandlePB(void) {
                         ttime.s_minute = ttime.minute;
                         ttime.s_second = ttime.second;
                         break;
-                    case CLEAR:
-                        ClearAlarmEE();
-                        mstate.menuLine = EXITMAIN;
+                    case CLEAR:                        
+                        mstate.adjusting = 1;
+                        ClearAlarmEE();                                                
+                        mstate.adjusted = 1;                        
                         break;
                     case MAX_MIN_PRESSURE:
                         mstate.menuLevel = MAXMINLEVEL;
@@ -1056,6 +1057,16 @@ void UpdateDisplay(void) {
                             sprintf(outstring, "SLOPE: %5.2f", eeconfig.PSlope);
                             WriteSmallString(outstring, 6, 0, 0);
                             break;
+                        case CLEAR:                            
+                            if(mstate.adjusted) {        
+                                if(!DisplayMessage("CLEAR SUCCESS", 4, 2)) {                               
+                                    mstate.adjusted = 0;
+                                    mstate.adjusting = 0;
+                                    mstate.menuLine = EXITMAIN;   
+                                }                                
+                            }
+                            
+                            break;
                         default:
                             break;
                     }
@@ -1157,7 +1168,7 @@ void UpdateDisplay(void) {
                 switch(mstate.menuLine) {
                     case MAX_PRESSURE:
                         // Instructions
-                        sprintf(outstring, "ENT:BACK ]:RESET");
+                        sprintf(outstring, "ENT:BACK ]:RESET");                        
                         WriteSmallString(outstring, 0, 0, 0); 
 
                         // Max pressure
@@ -1791,6 +1802,22 @@ void lowBattSound(void)
     PiezoEnable_SetHigh();
     delay_ms(50);
     PiezoEnable_SetLow(); 
+}
+
+/* Display a message with hold time, in seconds */
+// Example use case: when we want to display confirmation message
+bool DisplayMessage(char *msg, uint8_t line, uint8_t column) {
+    static uint8_t holdTime = DISPLAY_MESSAGE_HOLDTIME;
+    WriteSmallString(msg, line, column, 0);
+    holdTime--;
+
+    if(holdTime == 0) {
+        holdTime = DISPLAY_MESSAGE_HOLDTIME;
+        return false;
+    }
+    else {
+        return true;
+    }    
 }
 
 /**
