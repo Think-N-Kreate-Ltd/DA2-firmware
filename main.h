@@ -128,8 +128,9 @@ const char FIRMWARE_VERSION_STRING[] = "v1.4.1";   // NHAN: show firmware versio
 #define EXITMAXMIN      1
 #define MAX_PRESSURE    2
 #define MIN_PRESSURE    3
+#define CLEAR_MAXMIN    4
 
-#define LASTMAXMINLINE  3
+#define LASTMAXMINLINE  4
 
 static char * MenuString[] = 
 {
@@ -164,13 +165,14 @@ static char * TimeString[] =
 
 static char * MaxMinString[] =
 {
-    "            ",
-    "<BACK       ",
-    "MAX PRESSURE",
-    "MIN PRESSURE",
+    "             ",
+    "<BACK        ",
+    "MAX PRESSURE ",
+    "MIN PRESSURE ",
+    "CLEAR MAX/MIN",
 };
 
-#define MAXMAXMINSTRING 4
+#define MAXMAXMINSTRING 5
 
 struct STATETIME {
     uint32_t    timecount;            //basic 100 ms counter

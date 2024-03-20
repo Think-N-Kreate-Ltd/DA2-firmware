@@ -753,8 +753,30 @@ void HandlePB(void) {
                         mstate.menuLine = EXITMAIN;
                         break;
                     case MAX_PRESSURE:
-                    case MIN_PRESSURE:
+                    case MIN_PRESSURE:                    
                         mstate.adjusting = 1;
+                        break;
+                    case CLEAR_MAXMIN:
+//                        __debug_break();
+                        maxPressure.year = 24;
+                        maxPressure.month = 1;
+                        maxPressure.day = 1;
+                        maxPressure.hour = 0;
+                        maxPressure.min = 0;
+                        maxPressure.sec = 0;
+                        maxPressure.am = 1;
+                        maxPressure.pressure = PRESSURE_EMPTY;    // to indicate that data is empty
+                        WritePressureEventEE(EE_MAX_PRESSURE_ADDRESS);
+                        minPressure.year = 24;
+                        minPressure.month = 1;
+                        minPressure.day = 1;
+                        minPressure.hour = 0;
+                        minPressure.min = 0;
+                        minPressure.sec = 0;
+                        minPressure.am = 1;
+                        minPressure.pressure = PRESSURE_EMPTY;    // to indicate that data is empty
+                        WritePressureEventEE(EE_MIN_PRESSURE_ADDRESS);
+                        mstate.adjusted = 1;
                         break;
                     default:
                         break;                                                     
@@ -1126,67 +1148,65 @@ void UpdateDisplay(void) {
             }
             break;
         case MAXMINLEVEL:
-            if(mstate.adjusting) {
-                if(mstate.adjusted) {
-                    WriteSmallString("RESET SUCCESS", 4, 2, 0);
-                    mstate.adjusted = 0;
-                    mstate.adjusting = 0;
-                }
-                else {
-                    switch(mstate.menuLine) {
-                        case MAX_PRESSURE:
-                            // Instructions
-                            sprintf(outstring, "ENT:BACK ]:RESET");
-                            WriteSmallString(outstring, 0, 0, 0); 
+            if(mstate.adjusted) {
+                WriteSmallString("CLEAR SUCCESS", 4, 2, 0);
+                mstate.adjusted = 0;
+                mstate.adjusting = 0;
+            }
+            else if(mstate.adjusting) {
+                switch(mstate.menuLine) {
+                    case MAX_PRESSURE:
+                        // Instructions
+                        sprintf(outstring, "ENT:BACK ]:RESET");
+                        WriteSmallString(outstring, 0, 0, 0); 
 
-                            // Max pressure
-                            sprintf(outstring, "MAX");
-                            WriteSmallString(outstring, 2, 0, 0);
-                            if(maxPressure.pressure >= 0) {
-                                sprintf(outstring, "%3d", maxPressure.pressure);
-                            }
-                            else {
-                                // data is empty, write "---"
-                                sprintf(outstring, "---");
-                            }                        
-                            WriteLargeString(outstring, 2, 1);
-                            sprintf(outstring, "PSI");
-                            WriteSmallString(outstring, 5, 13, 0);
-                            if (maxPressure.am) { // AM
-                                sprintf(outstring, "@ %02d/%02d/%02d %02d:%02dAM", maxPressure.month, maxPressure.day, maxPressure.year, maxPressure.hour, maxPressure.min);
-                            } else { // PM
-                                sprintf(outstring, "@ %02d/%02d/%02d %02d:%02dPM", maxPressure.month, maxPressure.day, maxPressure.year, maxPressure.hour, maxPressure.min);
-                            }
-                            WriteSmallString(outstring, 7, 0, 0);                           
-                            break;
-                        case MIN_PRESSURE:
-                            // Instructions
-                            sprintf(outstring, "ENT:BACK ]:RESET");
-                            WriteSmallString(outstring, 0, 0, 0); 
+                        // Max pressure
+                        sprintf(outstring, "MAX");
+                        WriteSmallString(outstring, 2, 0, 0);
+                        if(maxPressure.pressure >= 0) {
+                            sprintf(outstring, "%3d", maxPressure.pressure);
+                        }
+                        else {
+                            // data is empty, write "---"
+                            sprintf(outstring, "---");
+                        }                        
+                        WriteLargeString(outstring, 2, 1);
+                        sprintf(outstring, "PSI");
+                        WriteSmallString(outstring, 5, 13, 0);
+                        if (maxPressure.am) { // AM
+                            sprintf(outstring, "@ %02d/%02d/%02d %02d:%02dAM", maxPressure.month, maxPressure.day, maxPressure.year, maxPressure.hour, maxPressure.min);
+                        } else { // PM
+                            sprintf(outstring, "@ %02d/%02d/%02d %02d:%02dPM", maxPressure.month, maxPressure.day, maxPressure.year, maxPressure.hour, maxPressure.min);
+                        }
+                        WriteSmallString(outstring, 7, 0, 0);                           
+                        break;
+                    case MIN_PRESSURE:
+                        // Instructions
+                        sprintf(outstring, "ENT:BACK ]:RESET");
+                        WriteSmallString(outstring, 0, 0, 0); 
 
-                            // Max pressure
-                            sprintf(outstring, "MIN");
-                            WriteSmallString(outstring, 2, 0, 0);
-                            if(minPressure.pressure >= 0) {
-                                sprintf(outstring, "%3d", minPressure.pressure);
-                            }
-                            else {
-                                // data is empty, write "---"
-                                sprintf(outstring, "---");
-                            }                        
-                            WriteLargeString(outstring, 2, 1);
-                            sprintf(outstring, "PSI");
-                            WriteSmallString(outstring, 5, 13, 0);
-                            if (minPressure.am) { // AM
-                                sprintf(outstring, "@ %02d/%02d/%02d %02d:%02dAM", minPressure.month, minPressure.day, minPressure.year, minPressure.hour, minPressure.min);
-                            } else { // PM
-                                sprintf(outstring, "@ %02d/%02d/%02d %02d:%02dPM", minPressure.month, minPressure.day, minPressure.year, minPressure.hour, minPressure.min);
-                            }
-                            WriteSmallString(outstring, 7, 0, 0);                              
-                            break;
-                        default:
-                            break;
-                    }
+                        // Max pressure
+                        sprintf(outstring, "MIN");
+                        WriteSmallString(outstring, 2, 0, 0);
+                        if(minPressure.pressure >= 0) {
+                            sprintf(outstring, "%3d", minPressure.pressure);
+                        }
+                        else {
+                            // data is empty, write "---"
+                            sprintf(outstring, "---");
+                        }                        
+                        WriteLargeString(outstring, 2, 1);
+                        sprintf(outstring, "PSI");
+                        WriteSmallString(outstring, 5, 13, 0);
+                        if (minPressure.am) { // AM
+                            sprintf(outstring, "@ %02d/%02d/%02d %02d:%02dAM", minPressure.month, minPressure.day, minPressure.year, minPressure.hour, minPressure.min);
+                        } else { // PM
+                            sprintf(outstring, "@ %02d/%02d/%02d %02d:%02dPM", minPressure.month, minPressure.day, minPressure.year, minPressure.hour, minPressure.min);
+                        }
+                        WriteSmallString(outstring, 7, 0, 0);                              
+                        break;
+                    default:
+                        break;
                 }
             }
             else {
