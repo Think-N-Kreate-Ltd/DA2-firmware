@@ -304,7 +304,21 @@ void GetAnalog(void) {
     int16_t itemp;
 
     V5Enable_SetHigh(); // Enable sensor power
-    delay_ms(5);      // According to R1202 datasheet, soft start time is typically 2ms    
+    // We need to have some delay since:
+    // 1. R1202 has soft-start time, typically 2ms
+    // 2. Pressure transducer has response time (rise time).
+    //    It's not clear what this value is. It's not available in the datasheet.
+    //    Looking at oscilloscope shows that this might be 50 - 80ms
+    // Also, during active mode, we don't have to delay every time, since power to sensor is always on.
+    // Only in sleep mode, we need to apply enough delay to read correct value.
+    // If we don't have enough delay during sleep, we may read the wrong value.
+    if(!mstate.sleepMode) {
+        delay_ms(5);
+    }
+    else {
+        delay_ms(100);    
+    }
+    
     analog.rawPressure = ADCC_GetSingleConversion(Pressure);
     analog.rawVoltage = ADCC_GetSingleConversion(Volts);
     
