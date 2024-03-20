@@ -453,17 +453,21 @@ void HandlePB(void) {
                         if (ttime.s_month < 11) ttime.s_month++;
                         else ttime.s_month = 1;
                         break;
-                    case DAY:
-                        // TODO: what about day 31?
-                        if (ttime.s_day < 30) ttime.s_day++;
+                    case DAY:                        
+                        if (ttime.s_day < 31) ttime.s_day++;
                         else ttime.s_day = 1;
                         break;
                     case HOUR:
                         if (ttime.sadj_hour == 11) {
-                            ttime.sadj_hour = 12;
-                            if (ttime.s_am) ttime.s_am = 0;
-                            else ttime.s_am = 1;
-                        } else if (ttime.sadj_hour == 12) ttime.sadj_hour = 1;
+                            if(!ttime.s_am) {  // 11PM -> 0AM, to avoid 12PM
+                                ttime.sadj_hour = 0;
+                                ttime.s_am = 1;
+                            }
+                            else {  // 11AM -> 12PM, to avoid 12AM
+                                ttime.sadj_hour = 12;
+                                ttime.s_am = 0;
+                            }
+                        } else if (ttime.sadj_hour == 12) ttime.sadj_hour = 1;  // 12PM -> 1PM
                         else ttime.sadj_hour++;
                         break;
                     case MINUTE:
@@ -560,7 +564,15 @@ void HandlePB(void) {
                             ttime.sadj_hour = 11;
                             if (ttime.s_am) ttime.s_am = 0;
                             else ttime.s_am = 1;
-                        } else if (ttime.sadj_hour == 1) ttime.sadj_hour = 12;
+                        }
+                        else if (ttime.sadj_hour == 1 && !ttime.s_am) {  // 1PM -> 12PM, to avoid 0PM
+                            ttime.sadj_hour = 12; 
+                         }                         
+                        else if (ttime.sadj_hour == 0) {
+                            ttime.sadj_hour = 11;
+                            if(ttime.s_am) ttime.s_am = 0;
+                            else ttime.s_am = 1;
+                        }
                         else ttime.sadj_hour--;
                         break;
                     case MINUTE:
