@@ -268,9 +268,12 @@ void GetTime(void)
         ttime.hour -= 12;
         ttime.am = 0;
     }
-    else if(ttime.hour == 0)
+    else if(ttime.hour == 12) {  // 12PM        
+        ttime.am = 0;
+    }
+    else if(ttime.hour == 0)  // 0AM <=> 12AM
     {
-        ttime.hour = 1;
+//        ttime.hour = 1;
         ttime.am = 1;        
     }
     else ttime.am = 1;

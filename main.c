@@ -453,16 +453,21 @@ void HandlePB(void) {
                         if (ttime.s_month < 11) ttime.s_month++;
                         else ttime.s_month = 1;
                         break;
-                    case DAY:
-                        if (ttime.s_day < 30) ttime.s_day++;
+                    case DAY:                        
+                        if (ttime.s_day < 31) ttime.s_day++;
                         else ttime.s_day = 1;
                         break;
                     case HOUR:
                         if (ttime.sadj_hour == 11) {
-                            ttime.sadj_hour = 12;
-                            if (ttime.s_am) ttime.s_am = 0;
-                            else ttime.s_am = 1;
-                        } else if (ttime.sadj_hour == 12) ttime.sadj_hour = 1;
+                            if(!ttime.s_am) {  // 11PM -> 0AM, to avoid 12PM
+                                ttime.sadj_hour = 0;
+                                ttime.s_am = 1;
+                            }
+                            else {  // 11AM -> 12PM, to avoid 12AM
+                                ttime.sadj_hour = 12;
+                                ttime.s_am = 0;
+                            }
+                        } else if (ttime.sadj_hour == 12) ttime.sadj_hour = 1;  // 12PM -> 1PM
                         else ttime.sadj_hour++;
                         break;
                     case MINUTE:
@@ -559,7 +564,15 @@ void HandlePB(void) {
                             ttime.sadj_hour = 11;
                             if (ttime.s_am) ttime.s_am = 0;
                             else ttime.s_am = 1;
-                        } else if (ttime.sadj_hour == 1) ttime.sadj_hour = 12;
+                        }
+                        else if (ttime.sadj_hour == 1 && !ttime.s_am) {  // 1PM -> 12PM, to avoid 0PM
+                            ttime.sadj_hour = 12; 
+                         }                         
+                        else if (ttime.sadj_hour == 0) {
+                            ttime.sadj_hour = 11;
+                            if(ttime.s_am) ttime.s_am = 0;
+                            else ttime.s_am = 1;
+                        }
                         else ttime.sadj_hour--;
                         break;
                     case MINUTE:
@@ -1112,17 +1125,13 @@ void UpdateDisplay(void) {
                     case HOUR:
                         sprintf(outstring, "%s", TimeString[mstate.menuLine]);
                         WriteSmallString(outstring, 1, 7, 0);
-                        if (ttime.s_am) 
-                        {
-                            sprintf(outstring, "%2d", ttime.sadj_hour);
-                            WriteLargeString(outstring, 3, 2);
+                        sprintf(outstring, "%2d", ttime.sadj_hour);
+                        WriteLargeString(outstring, 3, 2);
+                        if (ttime.s_am) {
                             sprintf(outstring, "AM");
                             WriteSmallString(outstring, 6, 12, 0);
                         }
-                        else
-                        {
-                            sprintf(outstring, "%2d", ttime.sadj_hour);
-                            WriteLargeString(outstring, 3, 2);
+                        else {
                             sprintf(outstring, "PM");
                             WriteSmallString(outstring, 6, 12, 0);
                         }
