@@ -454,6 +454,7 @@ void HandlePB(void) {
                         else ttime.s_month = 1;
                         break;
                     case DAY:
+                        // TODO: what about day 31?
                         if (ttime.s_day < 30) ttime.s_day++;
                         else ttime.s_day = 1;
                         break;
@@ -1112,17 +1113,13 @@ void UpdateDisplay(void) {
                     case HOUR:
                         sprintf(outstring, "%s", TimeString[mstate.menuLine]);
                         WriteSmallString(outstring, 1, 7, 0);
-                        if (ttime.s_am) 
-                        {
-                            sprintf(outstring, "%2d", ttime.sadj_hour);
-                            WriteLargeString(outstring, 3, 2);
+                        sprintf(outstring, "%2d", ttime.sadj_hour);
+                        WriteLargeString(outstring, 3, 2);
+                        if (ttime.s_am) {
                             sprintf(outstring, "AM");
                             WriteSmallString(outstring, 6, 12, 0);
                         }
-                        else
-                        {
-                            sprintf(outstring, "%2d", ttime.sadj_hour);
-                            WriteLargeString(outstring, 3, 2);
+                        else {
                             sprintf(outstring, "PM");
                             WriteSmallString(outstring, 6, 12, 0);
                         }
