@@ -552,7 +552,7 @@ void HandlePB(void) {
                 ttime.new_time = 1;
                 switch (mstate.menuLine) {
                     case YEAR:
-                        if (ttime.s_year > 2023) ttime.s_year--;
+                        if (ttime.s_year > 2024) ttime.s_year--;
                         break;
                     case MONTH:
                         if (ttime.s_month > 1) ttime.s_month--;
@@ -947,8 +947,10 @@ void UpdateDisplay(void) {
                         WriteSmallString(outstring, 7, 0, 0);
                     }
                     else {
-                        sprintf(outstring, "LAST ALARM: NO");
-                        WriteSmallString(outstring, 6, 0, 0);
+                        // When there is no last alarm, do not show anything
+                        // See Bug ID 53
+//                        sprintf(outstring, "LAST ALARM: NO");
+//                        WriteSmallString(outstring, 6, 0, 0);
                     }
                 }
 

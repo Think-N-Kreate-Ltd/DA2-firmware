@@ -73,8 +73,7 @@ void Write15LargeString(char *string, unsigned char line, unsigned char column)
         //Now send output
         out = (unsigned char) (test & 0xFF);
         
-        // TEST: increase font size
-        Write15_20x32(out,page,vert);
+        Write15_20x40(out,page,vert);
 //        Write15_12x16(out,page,vert);
         string++;                   // transmit next character on following loop
         if(vert++ > 10)   // NHAN: iterate to next column
@@ -192,43 +191,22 @@ void Write15_5x7(unsigned char k,unsigned char page, unsigned char column, unsig
 //	}
 //}
 
-void Write15_20x32(unsigned char k,unsigned char page, unsigned char column)
-{
-    unsigned char i; 
+void Write15_20x40(unsigned char k,unsigned char page, unsigned char column) {
+    uint8_t i, j;    
+    uint8_t width = 20;     // change per font width
+    uint8_t height = 40;    // change per font height
+    uint8_t numPages = height / 8;
+    uint16_t len = width * numPages;
     
-    if(column > 10) return;
+    if(column > 5) return;  // change per font width
     
-    // 1st page
-	Set_Page_Address(page);
-    Set_Column_Address(Start_column+column*21);	
-	for(i=0;i<80;i+=4)  // 20 times
-	{
-		Write15Data(V_Ascii_20x32[k][i]);
-	}
-    
-    // 2nd page
-	Set_Page_Address(page+1);
-    Set_Column_Address(Start_column+column*21);	
-	for(i=1;i<80;i+=4)  // 20 times
-	{
-		Write15Data(V_Ascii_20x32[k][i]);
-	}
-    
-    // 3rd page
-	Set_Page_Address(page+2);
-    Set_Column_Address(Start_column+column*21);	
-	for(i=2;i<80;i+=4)  // 20 times
-	{
-		Write15Data(V_Ascii_20x32[k][i]);
-	}
-    
-    // 4th page
-	Set_Page_Address(page+3);
-    Set_Column_Address(Start_column+column*21);	
-	for(i=3;i<80;i+=4)  // 20 times
-	{
-		Write15Data(V_Ascii_20x32[k][i]);
-	}
+    for(i=0; i<numPages; i++) {
+        Set_Page_Address(page+i);
+        Set_Column_Address(Start_column+column*(width+1));
+        for(j=i; j<len; j+=numPages) {
+            Write15Data(V_Ascii_20x40[k][j]);
+        }
+    }
 }
 
 void adj_Contrast(void)
@@ -321,8 +299,8 @@ void Disp15Init(void)
 // y: column, from 0 -> 127
 void Write15Bitmap(unsigned char bitmap[], uint8_t Width, uint8_t Height, unsigned char page, unsigned char y)
 {
-    unsigned char i, j;    
-    unsigned numPages = Height / 8; // each page has 8 rows. Note: only accept numPages multiples of 8
+    uint8_t i, j;    
+    uint8_t numPages = Height / 8; // each page has 8 rows. Note: only accept numPages multiples of 8
     uint16_t len = Width * numPages;
     
     // Handle out of bound coordinates
