@@ -1103,7 +1103,7 @@ void UpdateDisplay(void) {
                 // TODO: after adjusting high pressure threshold, show the confirmation here
 
                 itemp = mstate.menuLine - 4;
-                if (itemp < 0) itemp = 0;
+                if (itemp < 1) itemp = 1;   // leave 0th line empty
                 startline = (uint8_t) itemp;
                 endline = startline + 7;
                 if (endline > MAXMENUSTRING) endline = MAXMENUSTRING;

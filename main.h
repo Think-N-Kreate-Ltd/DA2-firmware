@@ -101,18 +101,18 @@ const char FIRMWARE_VERSION_STRING[] = "v1.4.5";   // NHAN: show firmware versio
 #define MAXMINLEVEL 3
 
 //MenuLevel
-#define EXITMAIN    1
-#define PAST        102 // 2
-#define HIGHTHRESH  2
-#define LOWTHRESH   3 // 3
-#define CAL_LOW     4 // 4
-#define CAL_HIGH    5 // 5
-#define CANCEL_12H  6   // 6
-#define TIME        7   // 7
-#define CLEAR       8 // 8
-#define MAX_MIN_PRESSURE 9  // capture max and min pressure, see Bug ID 28
+#define EXITMAIN         1
+#define MAX_MIN_PRESSURE 2  // capture max and min pressure, see Bug ID 28
+#define CLEAR            3
+#define HIGHTHRESH       4
+#define LOWTHRESH        5
+#define TIME             6
+#define CANCEL_12H       7
+#define CAL_LOW          8
+#define CAL_HIGH         9
+#define PAST             102 // unsued, big number so that it will not reach
 
-#define LASTMENULINE 9
+#define LASTMENULINE     9
 
 //Time Adust Level
 #define EXITTIME    1
@@ -137,15 +137,15 @@ static char * MenuString[] =
 {
     "                 ",
     "EXIT             ",
-//    "SAVED ALARMS     ",
+    "MAX/MIN PRESSURE ",
+    "CLEAR ALARM HIST ",
     "SET HI ALARM     ",
     "SET LO ALARM     ",
+    "SET TIME         ",
+    "CANCEL 12H SLEEP ",
     "PRESSURE CAL ZERO",
     "PRESSURE CAL HIGH",
-    "CANCEL 12H SLEEP ",
-    "SET TIME         ",  
-    "CLEAR ALARM HIST ",
-    "MAX/MIN PRESSURE ",
+    //    "SAVED ALARMS     ",            
 };
 
 #define MAXMENUSTRING 10 // 10
