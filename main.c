@@ -657,14 +657,17 @@ void HandlePB(void) {
          */
 
         mstate.updateDisplay = 1;
-        if ((mstate.alarmHigh || mstate.alarmLow) && (mstate.menuLevel == MAINLEVEL)) { // NHAN: when inside menu, not able to silence
-//        if (mstate.alarmHigh || mstate.alarmLow) {
-            alarmSilenceSet();
+        if (mstate.menuLevel == MAINLEVEL) { // NHAN: when inside menu, not able to silence
+            if (mstate.alarmHigh || mstate.alarmLow) {
+                alarmSilenceSet();
+            }
+            else {
+                mstate.menuLevel = MENULEVEL;
+                mstate.menuLine = EXITMAIN;    
+            }
+            
         }
-        if (mstate.menuLevel == MAINLEVEL) {
-            mstate.menuLevel = MENULEVEL;
-            mstate.menuLine = EXITMAIN;
-        } else if (mstate.adjusting) mstate.adjusting = 0;
+        else if (mstate.adjusting) mstate.adjusting = 0;  // not sure why we need this?
         else //case not adjusting
         {
             if (mstate.menuLevel == MENULEVEL) {    // main menu, not adjusting
