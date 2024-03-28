@@ -827,7 +827,14 @@ void UpdateDisplay(void) {
             mstate.displayClear = 0;
         }
         DispBKLT_SetLow();                   
-        V5Enable_SetLow(); //Disable sensor power
+        V5Enable_SetLow(); //Disable display power
+        
+        // reset menu level and menu line before going to sleep
+        mstate.menuLevel = MAINLEVEL;
+        mstate.menuLine = EXITMAIN;
+        mstate.adjusting = 0;
+        mstate.adjusted = 0;
+        
         return;
     } else {
         V5Enable_SetHigh(); //Enable display and sensor power
