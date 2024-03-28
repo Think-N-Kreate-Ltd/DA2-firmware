@@ -61,6 +61,11 @@ const char FIRMWARE_VERSION_STRING[] = "v1.4.5";   // NHAN: show firmware versio
 #define NEARLOWBATTVOLTS    2.7  // show low battery symbol when reaching this voltage, a little above low battery level
 #endif
 
+#define HIGHTHRESH_ADJUST_MAX   120     // max value of high thresh, see PRD
+#define HIGHTHRESH_ADJUST_MIN   50      // min value of high thresh, see PRD
+#define LOWTHRESH_ADJUST_MAX    35      // max value of low thresh, see PRD
+#define LOWTHRESH_ADJUST_MIN    0       // min value of low thresh, see PRD
+
 //#define TESTINGTIMES
 #ifdef TESTINGTIMES
 #define DISPLAYTIMEOUT      3600        //in seconds. Display off after 60 minutes of inactivity

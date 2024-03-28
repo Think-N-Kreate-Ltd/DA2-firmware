@@ -427,10 +427,10 @@ void HandlePB(void) {
                         GetAlarmEE(mstate.pastAlarm);
                         break;
                     case HIGHTHRESH:
-                        if (eeconfig.AlarmHigh < 150) eeconfig.AlarmHigh++;
+                        if (eeconfig.AlarmHigh < HIGHTHRESH_ADJUST_MAX) eeconfig.AlarmHigh++;
                         break;
                     case LOWTHRESH:
-                        if (eeconfig.AlarmLow < 150) eeconfig.AlarmLow++;
+                        if (eeconfig.AlarmLow < LOWTHRESH_ADJUST_MAX) eeconfig.AlarmLow++;
                         break;
                     case CAL_LOW:
                         verify = 0;
@@ -527,10 +527,10 @@ void HandlePB(void) {
                         GetAlarmEE(mstate.pastAlarm);
                         break;
                     case HIGHTHRESH:
-                        if (eeconfig.AlarmHigh > 0) eeconfig.AlarmHigh--;
+                        if (eeconfig.AlarmHigh > HIGHTHRESH_ADJUST_MIN) eeconfig.AlarmHigh--;
                         break;
                     case LOWTHRESH:
-                        if (eeconfig.AlarmLow > 0) eeconfig.AlarmLow--;
+                        if (eeconfig.AlarmLow > LOWTHRESH_ADJUST_MIN) eeconfig.AlarmLow--;
                         break;
                     case CAL_LOW:
                         if (verified == 0) {
